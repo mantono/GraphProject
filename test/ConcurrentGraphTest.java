@@ -2,10 +2,15 @@ package alda.graphProject.test;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+import java.util.Set;
+import java.util.NoSuchElementException;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import alda.graphProject.ConcurrentGraph;
+import alda.graphProject.Edge;
 import alda.graphProject.Graph;
 
 public class ConcurrentGraphTest
@@ -56,11 +61,65 @@ public class ConcurrentGraphTest
 	}
 	
 	@Test
+	public void testRemoveOnNonExistingNode()
+	{
+		assertFalse(graph.remove("not here"));
+	}
+	
+	@Test
 	public void testConnect()
 	{
 		graph.connect("node0", "node1", 14);
 		assertEquals(14, graph.getWeight("node0", "node1"));
 		assertEquals(14, graph.getWeight("node1", "node0"));
+	}
+	
+	@Test(expected=NoSuchElementException.class)
+	public void testConnectionOfNonExistendNode()
+	{
+		graph.connect("node0", "node15", 9);
+	}
+	
+	@Test
+	public void testConnectDuplicateEdgesAndDisconnect()
+	{
+		graph.connect("node0", "node1", 5);
+		graph.connect("node0", "node1", 5);
+		graph.connect("node1", "node0", 5);
+		
+		assertTrue(graph.isConnected("node0", "node1"));
+		assertTrue(graph.isConnected("node1", "node0"));
+		
+		assertTrue(graph.disconnect("node0", "node1"));
+		
+		assertFalse(graph.isConnected("node1", "node0"));
+		assertFalse(graph.isConnected("node0", "node1"));
+	}
+	
+	@Test(expected=NoSuchElementException.class)
+	public void testIsConnectedWithNonExistingNode()
+	{
+		assertFalse(graph.isConnected("node0", "node13"));
+		assertFalse(graph.isConnected("node13", "node0"));
+	}
+	
+	@Test
+	public void testConnectEdgesAndRemoveNode()
+	{
+		graph.connect("node0", "node1", 4);
+		assertTrue(graph.remove("node0"));
+		assertEquals(0, graph.edgeSize("node1"));
+	}
+	
+	@Test
+	public void testEdgeSize()
+	{
+		assertEquals(0, graph.edgeSize("node0"));
+		
+		graph.connect("node0", "node1", 10);
+		graph.connect("node0", "node2", 10);
+		graph.connect("node0", "node3", 10);
+		assertEquals(3, graph.edgeSize("node0"));		
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
@@ -77,4 +136,22 @@ public class ConcurrentGraphTest
 		graph.connect("node2", "node3", 3);
 		assertTrue(graph.hasPath("node0", "node1"));
 	}
+	
+	@Test
+	public void testClear()
+	{
+		graph.clear();
+		assertEquals(0, graph.size());
+	}
+	
+	@Test
+	public void testGetEdgesForNode()
+	{
+		graph.connect("node0", "node1", 3);
+		graph.connect("node0", "node2", 4);
+		graph.connect("node0", "node3", 5);
+		List<Edge<String>> edges = graph.getEdgesFor("node0");
+		assertEquals(3, edges.size());
+	}
+
 }
