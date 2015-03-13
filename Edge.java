@@ -1,6 +1,6 @@
 package alda.graphProject;
 
-public class Edge<T>
+public class Edge<T> implements Comparable<Edge<T>>
 {
 	private final T destination;
 	private int weight;
@@ -51,6 +51,12 @@ public class Edge<T>
 	public String toString()
 	{
 		return "--" + weight + "-->" + destination.toString();
+	}
+
+	@Override
+	public int compareTo(Edge<T> other)
+	{
+		return this.weight - other.weight;
 	}
 	
 }

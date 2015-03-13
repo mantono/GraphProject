@@ -6,8 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.PriorityBlockingQueue;
 
 
 public class ConcurrentGraph<T> implements Graph<T>
@@ -58,15 +61,15 @@ public class ConcurrentGraph<T> implements Graph<T>
 		Set<T> visitedNodes = new HashSet<T>();
 		Stack<T> path = new Stack<T>();
 		path.push(start);
-		T currentNode = start;
+		T currentNode;
 		while(!path.isEmpty())
 		{
+			currentNode = path.peek();
 			if(currentNode.equals(end))
 				return path;
 			visitedNodes.add(currentNode);
 			if(!pushNextUnvisitedNode(path, visitedNodes))
 				path.pop();
-			currentNode = path.peek();
 		}			
 		return path;
 	}
@@ -107,7 +110,16 @@ public class ConcurrentGraph<T> implements Graph<T>
 	@Override
 	public List<Edge<T>> getShortestPath(T start, T end)
 	{
-		// TODO Auto-generated method stub
+		Queue<Edge<T>> edgesToWalk = new PriorityBlockingQueue<Edge<T>>();
+		Map<T, PathRecord<T>> pathTable = new HashMap<T, PathRecord<T>>();
+		pathTable.put(start, new PathRecord<T>(start, 0));
+		
+		edgesToWalk.addAll(getEdgesFor(start));
+		T currentNode = start;
+		while(!edgesToWalk.isEmpty())
+		{
+			
+		}
 		return null;
 	}
 
