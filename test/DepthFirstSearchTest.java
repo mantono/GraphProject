@@ -14,15 +14,19 @@ import org.junit.Test;
 
 import alda.graphProject.ConcurrentGraph;
 import alda.graphProject.Graph;
+import alda.graphProject.GraphExplorer;
+import alda.graphProject.PathFinder;
 
 public class DepthFirstSearchTest
 {
 	Graph<String> graph;
+	GraphExplorer<String> explorer;
 
 	@Before
 	public void setup()
 	{
 		graph = new ConcurrentGraph<String>();
+		explorer = new PathFinder<String>(graph);
 	}
 
 	private void createRandomGraph(int nodes, int edges)
@@ -53,14 +57,31 @@ public class DepthFirstSearchTest
 		graph.connect("A", "D", 3);
 		graph.connect("A", "E", 3);
 
-		List<String> path = graph.depthFirstSearch("A", "E");
-		assertEquals(path.toString(), "[A, E]");
+		List<String> path = explorer.depthFirstSearch("A", "E");
+		assertEquals("[A, E]", path.toString());
 
-		path = graph.depthFirstSearch("A", "D");
-		assertEquals(path.toString(), "[A, D]");
+		path = explorer.depthFirstSearch("A", "D");
+		assertEquals("[A, D]", path.toString());
 
-		path = graph.depthFirstSearch("A", "C");
-		assertEquals(path.toString(), "[A, B, C]");
+		path = explorer.depthFirstSearch("A", "C");
+		assertEquals("[A, B, C]", path.toString());
+	}
+	
+	@Test
+	public void testHasPathInSimpleGraph()
+	{
+		graph.add("node0");
+		graph.add("node1");
+		graph.add("node2");
+		graph.add("node3");
+		
+		graph.connect("node0", "node1", 3);
+		graph.connect("node1", "node2", 3);
+		graph.connect("node2", "node3", 3);
+		
+		assertTrue(explorer.hasPath("node0", "node1"));
+		assertTrue(explorer.hasPath("node0", "node2"));
+		assertTrue(explorer.hasPath("node0", "node3"));
 	}
 	
 	@Test
@@ -89,8 +110,8 @@ public class DepthFirstSearchTest
 		graph.connect("I", "E", 1);
 		graph.connect("E", "A", 1);
 		
-		assertTrue(graph.hasPath("A", "H"));
-		List<String> dfsPath = graph.depthFirstSearch("A", "H");
+		assertTrue(explorer.hasPath("A", "H"));
+		List<String> dfsPath = explorer.depthFirstSearch("A", "H");
 		assertTrue(dfsPath.size() == 4 || dfsPath.size() == 5 || dfsPath.size() == 6);
 	}
 	
@@ -107,7 +128,7 @@ public class DepthFirstSearchTest
 		graph.connect("B", "C", 3);
 		graph.connect("C", "D", 3);
 		
-		List<String> path = graph.depthFirstSearch("A", "E");
+		List<String> path = explorer.depthFirstSearch("A", "E");
 		assertEquals(path.toString(), "[]");
 	}
 
@@ -117,9 +138,8 @@ public class DepthFirstSearchTest
 		createRandomGraph(10000, 45600);
 		final String start = "node0";
 		final String end = "node1000";
-		List<String> dsfPathGraph = graph.depthFirstSearch(start, end);
+		List<String> dsfPathGraph = explorer.depthFirstSearch(start, end);
 		assertTrue(dsfPathGraph.size() <= graph.size());
 
 	}
-
 }

@@ -11,6 +11,8 @@ import org.junit.Test;
 
 import alda.graphProject.Graph;
 import alda.graphProject.ConcurrentGraph;
+import alda.graphProject.GraphExplorer;
+import alda.graphProject.PathFinder;
 
 public class ConcurrentGraphTestWithALDATestCases
 {
@@ -162,7 +164,8 @@ public class ConcurrentGraphTestWithALDATestCases
 
 	private void testDepthFirstSearch(String start, String end, int minimumPathLength) {
 		createExampleGraph();
-		List<String> path = graph.depthFirstSearch(start, end);
+		GraphExplorer<String> explorer = new PathFinder<String>(graph);
+		List<String> path = explorer.depthFirstSearch(start, end);
 
 		assertTrue(path.size() >= minimumPathLength);
 		assertTrue(path.size() <= graph.size());

@@ -1,38 +1,33 @@
 package alda.graphProject;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.PriorityBlockingQueue;
 
 
 public class ConcurrentGraph<T> implements Graph<T>
 {
-	private final Map<T, List<Edge<T>>> nodes = new HashMap<T, List<Edge<T>>>();
+	private final Map<T, List<Edge<T>>> nodeConnections = new HashMap<T, List<Edge<T>>>();
 
 	@Override
 	public boolean add(T data)
 	{
-		if(nodes.containsKey(data))
+		if(nodeConnections.containsKey(data))
 			return false;
-		nodes.put(data, new ArrayList<Edge<T>>());
+		nodeConnections.put(data, new ArrayList<Edge<T>>());
 		return true;
 	}
 
 	@Override
 	public boolean remove(T data)
 	{
-		if(!nodes.containsKey(data))
+		if(!nodeConnections.containsKey(data))
 			return false;
 		removeConnectionsTo(data);
-		nodes.remove(data);
+		nodeConnections.remove(data);
 		return true;
 	}
 	
@@ -46,46 +41,7 @@ public class ConcurrentGraph<T> implements Graph<T>
 	@Override
 	public boolean contains(T data)
 	{
-		return nodes.containsKey(data);
-	}
-
-	@Override
-	public boolean hasPath(T start, T end)
-	{
-		List<T> visitedNodes = depthFirstSearch(start, end);
-		return visitedNodes.contains(end);
-	}
-
-	public List<T> depthFirstSearch(T start, T end)
-	{
-		Set<T> visitedNodes = new HashSet<T>();
-		Stack<T> path = new Stack<T>();
-		path.push(start);
-		T currentNode;
-		while(!path.isEmpty())
-		{
-			currentNode = path.peek();
-			if(currentNode.equals(end))
-				return path;
-			visitedNodes.add(currentNode);
-			if(!pushNextUnvisitedNode(path, visitedNodes))
-				path.pop();
-		}			
-		return path;
-	}
-
-	private boolean pushNextUnvisitedNode(Stack<T> path, Set<T> visitedNodes)
-	{
-		List<Edge<T>> edges = getEdgesFor(path.peek());
-		for(Edge<T> edge:edges)
-		{
-			if(!visitedNodes.contains(edge.getDestination()))
-			{
-				path.push(edge.getDestination());
-				return true;
-			}
-		}
-		return false;
+		return nodeConnections.containsKey(data);
 	}
 
 	@Override
@@ -96,9 +52,10 @@ public class ConcurrentGraph<T> implements Graph<T>
 		return getEdgeBetween(start, end).getWeight();
 	}
 	
-	private Edge<T> getEdgeBetween(T node1, T node2)
+	@Override
+	public Edge<T> getEdgeBetween(T node1, T node2)
 	{
-		List<Edge<T>> edgesNode1 = nodes.get(node1);
+		List<Edge<T>> edgesNode1 = nodeConnections.get(node1);
 		for(Edge<T> edge:edgesNode1)
 		{
 			if(edge.getDestination().equals(node2))
@@ -108,31 +65,15 @@ public class ConcurrentGraph<T> implements Graph<T>
 	}
 
 	@Override
-	public List<Edge<T>> getShortestPath(T start, T end)
-	{
-		Queue<Edge<T>> edgesToWalk = new PriorityBlockingQueue<Edge<T>>();
-		Map<T, PathRecord<T>> pathTable = new HashMap<T, PathRecord<T>>();
-		pathTable.put(start, new PathRecord<T>(start, 0));
-		
-		edgesToWalk.addAll(getEdgesFor(start));
-		T currentNode = start;
-		while(!edgesToWalk.isEmpty())
-		{
-			
-		}
-		return null;
-	}
-
-	@Override
 	public int size()
 	{
-		return nodes.size();
+		return nodeConnections.size();
 	}
 	
 	@Override
 	public void clear()
 	{
-		nodes.clear();
+		nodeConnections.clear();
 	}	
 
 	@Override
@@ -152,7 +93,7 @@ public class ConcurrentGraph<T> implements Graph<T>
 	
 	private boolean nodesExist(T node1, T node2)
 	{
-		if(nodes.containsKey(node1) && nodes.containsKey(node2))
+		if(nodeConnections.containsKey(node1) && nodeConnections.containsKey(node2))
 			return true;
 		return false;
 	}
@@ -167,7 +108,7 @@ public class ConcurrentGraph<T> implements Graph<T>
 
 	private void createEdge(T source, T destination, int weight)
 	{
-		List<Edge<T>> edges = nodes.get(source);
+		List<Edge<T>> edges = nodeConnections.get(source);
 		if(edges == null)
 			edges = new ArrayList<Edge<T>>();
 		Edge<T> edge = new Edge<T>(destination, weight);
@@ -216,7 +157,7 @@ public class ConcurrentGraph<T> implements Graph<T>
 	public int getNumberOfEdges()
 	{
 		int edgeCount = 0;
-		for(List<Edge<T>> edges : nodes.values())
+		for(List<Edge<T>> edges : nodeConnections.values())
 			edgeCount += edges.size();
 		return edgeCount/2;
 	}
@@ -224,12 +165,18 @@ public class ConcurrentGraph<T> implements Graph<T>
 	@Override
 	public List<Edge<T>> getEdgesFor(T node)
 	{
-		return nodes.get(node);
+		return nodeConnections.get(node);
 	}
 
 	@Override
 	public int edgeSize(T data)
 	{
 		return getEdgesFor(data).size();
+	}
+
+	@Override
+	public Set<T> getAllNodes()
+	{
+		return nodeConnections.keySet();
 	}
 }

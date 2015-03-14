@@ -128,15 +128,7 @@ public class ConcurrentGraphTest
 		graph.connect("node0", "node1", 0);
 	}
 	
-	@Test
-	public void testHasPathInSimpleGraph()
-	{
-		graph.connect("node0", "node1", 3);
-		graph.connect("node1", "node2", 3);
-		graph.connect("node2", "node3", 3);
-		assertTrue(graph.hasPath("node0", "node1"));
-	}
-	
+
 	@Test
 	public void testClear()
 	{
