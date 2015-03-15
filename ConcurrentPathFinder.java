@@ -1,4 +1,4 @@
-package alda.graphProject.concurrent;
+package alda.graphProject;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,16 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
-import alda.graphProject.Edge;
-import alda.graphProject.Graph;
-import alda.graphProject.GraphExplorer;
-import alda.graphProject.concurrent.ImmutablePathRecord;
-
 public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 {
 	private final Graph<T> graph;
 	private Set<T> visitedNodes; //TODO Kolla om volatile behövs eller inte. Data kan bli osynkrioniserad mellan trådar, men skadar det algoritmen?
-	private Queue<ImmutablePathRecord<T>> nodes;
+	private Queue<PathRecord<T>> nodes;
 	private ConcurrentMap<T, T> nodePath;
 	
 	public ConcurrentPathFinder(Graph<T> graph)
@@ -36,7 +31,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		final int numberOfNodes = graph.size();
 		setupDataStructures();
 		createPathRecords(start);
-		ImmutablePathRecord<T> currentRecord = new ImmutablePathRecord<T>(start, start, 0);
+		PathRecord<T> currentRecord = new PathRecord<T>(start, start, 0);
 		while(visitedNodes.size() < numberOfNodes)
 		{
 			visitedNodes.add(currentRecord.getNode());
@@ -47,7 +42,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		return buildPath(start, end);
 	}
 	
-	private void writePathRecord(ImmutablePathRecord<T> currentRecord)
+	private void writePathRecord(PathRecord<T> currentRecord)
 	{
 		nodePath.put(currentRecord.getNode(), currentRecord.getNodeReachedThrough());
 	}
@@ -56,7 +51,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	{
 		for(T node:graph.getAllNodes())
 			if(node != start)
-				nodes.add(new ImmutablePathRecord<T>(node));
+				nodes.add(new PathRecord<T>(node));
 	}
 
 	@Override
@@ -73,17 +68,17 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	{
 		nodePath = new ConcurrentHashMap<T, T>(graph.size());
 		visitedNodes = new HashSet<T>(graph.size());
-		nodes = new PriorityBlockingQueue<ImmutablePathRecord<T>>();
+		nodes = new PriorityBlockingQueue<PathRecord<T>>();
 	}
 	
-	private void updateEdges(ImmutablePathRecord<T> currentRecord)
+	private void updateEdges(PathRecord<T> currentRecord)
 	{
 		int currentWeight = currentRecord.getWeight();
 		List<Edge<T>> connectingEdges = graph.getEdgesFor(currentRecord.getNode());
 		for(Edge<T> edge:connectingEdges)
 		{
 			int newWeightForNode = currentWeight + edge.getWeight();
-			nodes.add(new ImmutablePathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
+			nodes.add(new PathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
 		}
 		
 	}
@@ -144,13 +139,24 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		return false;
 	}
 
-	private ImmutablePathRecord<T> getNextNode()
+	private PathRecord<T> getNextNode()
 	{
-		ImmutablePathRecord<T> next;
+		PathRecord<T> next;
 		do
 		{
 			next = nodes.poll();
-		}while(visitedNodes.contains(next.getNode()) && !nodes.isEmpty());
+		}while(!nodes.isEmpty() && visitedNodes.contains(next.getNode()));
 		return next;
+	}
+	
+	class ThreadRunner implements Runnable
+	{
+
+		@Override
+		public void run()
+		{
+
+		}
+		
 	}
 }

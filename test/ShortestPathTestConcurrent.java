@@ -5,16 +5,17 @@ import static org.junit.Assert.*;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import alda.graphProject.ConcurrentGraph;
+import alda.graphProject.ConcurrentPathFinder;
 import alda.graphProject.Edge;
 import alda.graphProject.Graph;
 import alda.graphProject.GraphExplorer;
 import alda.graphProject.PathFinder;
-import alda.graphProject.concurrent.ConcurrentPathFinder;
 
 public class ShortestPathTestConcurrent
 {
@@ -28,6 +29,22 @@ public class ShortestPathTestConcurrent
 		graph = new ConcurrentGraph<String>();
 		oracle = new PathFinder<String>(graph);
 		concurrent = new ConcurrentPathFinder<String>(graph);
+	}
+	
+	private void printGraph()
+	{
+		Set<String> nodes = graph.getAllNodes();
+		System.out.println("graph data\n{");
+		for(String node:nodes)
+		{
+			List<Edge<String>> edges = graph.getEdgesFor(node);
+			for(Edge<String> edge:edges)
+			{
+				if(edge.getDestination().compareTo(node) < 0)
+					System.out.println(node + " -- " + edge.getDestination() + "[label=" + edge.getWeight() + "];");
+			}
+		}
+		System.out.println("}");
 	}
 	
 	private String createRandomConnectedGraph(int nodes, int edges, int maxWeight)
@@ -109,7 +126,21 @@ public class ShortestPathTestConcurrent
 		
 		List<Edge<String>> oraclePath = oracle.getShortestPath("B", "E");
 		List<Edge<String>> concurrentPath = concurrent.getShortestPath("B", "E");
+		int result = concurrent.getTotalWeight("B", "E");
 		assertEquals(oraclePath, concurrentPath);
+		assertEquals(14, result);
+		
+		oraclePath = oracle.getShortestPath("C", "F");
+		concurrentPath = concurrent.getShortestPath("C", "F");
+		result = concurrent.getTotalWeight("C", "F");
+		assertEquals(oraclePath, concurrentPath);
+		assertEquals(4, result);
+		
+		oraclePath = oracle.getShortestPath("A", "G");
+		concurrentPath = concurrent.getShortestPath("A", "G");
+		result = concurrent.getTotalWeight("A", "G");
+		assertEquals(oraclePath, concurrentPath);
+		assertEquals(9, result);
 	}
 	
 	@Test
@@ -209,7 +240,7 @@ public class ShortestPathTestConcurrent
 		
 		System.out.println("Elapsed time oracle: " + oracleTime);
 		System.out.println("Elapsed time concurrent: " + concurrentTime);
-		System.out.println(1-(concurrentTime/(double)oracleTime));
+		System.out.println(100*(concurrentTime/(double)oracleTime) + "% compared to oracle time");
 		
 		assertEquals(oraclePath, concurrentPath);
 		assertTrue(oracleTime > concurrentTime);
@@ -220,10 +251,10 @@ public class ShortestPathTestConcurrent
 	@Test
 	public void stressTestWithNoAsserts()
 	{
-		for(int i = 0; i < 100; i++)
+		for(int i = 0; i < 50; i++)
 		{
-			int m = (i/20)+1;
-			createRandomConnectedGraph(1000*m, 3000*m, 100);
+			int m = (i/4)+1;
+			createRandomConnectedGraph(1000*m, 2000*m, 100);
 			concurrent.getShortestPath("node0", "node800");
 		}
 	}
