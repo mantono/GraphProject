@@ -32,12 +32,23 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		setupDataStructures();
 		createPathRecords(start);
 		PathRecord<T> currentRecord = new PathRecord<T>(start, start, 0);
+		Runnable first = new Thread(new ThreadRunner(currentRecord, numberOfNodes));
+		Runnable second = new Thread(new ThreadRunner(currentRecord, numberOfNodes));
+		Runnable third = new Thread(new ThreadRunner(currentRecord, numberOfNodes));
+		first.run();
+		second.run();
+		third.run();
 		while(visitedNodes.size() < numberOfNodes)
 		{
-			visitedNodes.add(currentRecord.getNode());
-			updateEdges(currentRecord);
-			writePathRecord(currentRecord);
-			currentRecord = getNextNode();
+			try
+			{
+				Thread.sleep(400);
+			}
+			catch(InterruptedException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return buildPath(start, end);
 	}
@@ -151,11 +162,25 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	
 	class ThreadRunner implements Runnable
 	{
+		private final int numberOfNodes;
+		private PathRecord<T> currentRecord;
+		
+		ThreadRunner(PathRecord<T> firstRecord, int graphSize)
+		{
+			this.currentRecord = firstRecord;
+			this.numberOfNodes = graphSize;
+		}
 
 		@Override
 		public void run()
 		{
-
+			while(visitedNodes.size() < numberOfNodes)
+			{
+				visitedNodes.add(currentRecord.getNode());
+				updateEdges(currentRecord);
+				writePathRecord(currentRecord);
+				currentRecord = getNextNode();
+			}
 		}
 		
 	}
