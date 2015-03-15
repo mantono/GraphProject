@@ -193,5 +193,39 @@ public class ShortestPathTestConcurrent
 		List<Edge<String>> concurrentPath = concurrent.getShortestPath("node11", "node7");
 		assertEquals(oraclePath, concurrentPath);	
 	}
+	
+	@Test
+	public void testBigGraphAndMeasurePerformance()
+	{
+		createRandomConnectedGraph(10000, 20000, 30);
+		final long oracleTimeStart = System.nanoTime();
+		List<Edge<String>> oraclePath = oracle.getShortestPath("node11", "node500");
+		final long oracleTimeFinished = System.nanoTime();
+		final long concurrentTimeStart = System.nanoTime();
+		List<Edge<String>> concurrentPath = concurrent.getShortestPath("node11", "node500");
+		final long concurrentTimeFinished = System.nanoTime();
+		final long oracleTime = oracleTimeFinished - oracleTimeStart;
+		final long concurrentTime = concurrentTimeFinished - concurrentTimeStart;
+		
+		System.out.println("Elapsed time oracle: " + oracleTime);
+		System.out.println("Elapsed time concurrent: " + concurrentTime);
+		System.out.println(1-(concurrentTime/(double)oracleTime));
+		
+		assertEquals(oraclePath, concurrentPath);
+		assertTrue(oracleTime > concurrentTime);
+		assertTrue(oracleTime > concurrentTime*1.2);
+		assertTrue(oracleTime > concurrentTime*1.4);
+	}
+	
+	@Test
+	public void stressTestWithNoAsserts()
+	{
+		for(int i = 0; i < 100; i++)
+		{
+			int m = (i/20)+1;
+			createRandomConnectedGraph(1000*m, 3000*m, 100);
+			concurrent.getShortestPath("node0", "node800");
+		}
+	}
 
 }

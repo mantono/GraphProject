@@ -205,6 +205,17 @@ public class ShortestPathTest
 		assertEquals(189, sum);
 	}
 	
+	@Test
+	public void stressTestWithNoAsserts()
+	{
+		for(int i = 0; i < 100; i++)
+		{
+			int m = (i/20)+1;
+			createRandomConnectedGraph(1000*m, 3000*m, 100);
+			explorer.getShortestPath("node0", "node800");
+		}
+	}
+	
 	private void printGraph()
 	{
 		Set<String> nodes = graph.getAllNodes();
