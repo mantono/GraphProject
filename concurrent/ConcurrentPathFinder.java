@@ -1,4 +1,4 @@
-package alda.graphProject;
+package alda.graphProject.concurrent;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,15 +9,23 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.PriorityBlockingQueue;
 
-public class PathFinder<T> implements GraphExplorer<T>
+import alda.graphProject.Edge;
+import alda.graphProject.Graph;
+import alda.graphProject.GraphExplorer;
+import alda.graphProject.concurrent.ImmutablePathRecord;
+
+public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 {
 	private final Graph<T> graph;
-	private Map<T, PathRecord<T>> pathTable;
-	private Set<T> visitedNodes;
+	private Set<T> visitedNodes; //TODO Kolla om volatile behövs eller inte. Data kan bli osynkrioniserad mellan trådar, men skadar det algoritmen?
+	private Queue<ImmutablePathRecord<T>> nodes;
+	private ConcurrentMap<T, T> nodePath;
 	
-	public PathFinder(Graph<T> graph)
+	public ConcurrentPathFinder(Graph<T> graph)
 	{
 		this.graph = graph;
 	}
@@ -28,21 +36,27 @@ public class PathFinder<T> implements GraphExplorer<T>
 		final int numberOfNodes = graph.size();
 		setupDataStructures();
 		createPathRecords(start);
-		T currentNode = start;
+		ImmutablePathRecord<T> currentRecord = new ImmutablePathRecord<T>(start, start, 0);
 		while(visitedNodes.size() < numberOfNodes)
 		{
-			visitedNodes.add(currentNode);
-			updateEdges(currentNode);
-			currentNode = getNextNode();
+			visitedNodes.add(currentRecord.getNode());
+			updateEdges(currentRecord);
+			writePathRecord(currentRecord);
+			currentRecord = getNextNode();
 		}
-		return buildPath(pathTable, start, end);
+		return buildPath(start, end);
 	}
 	
+	private void writePathRecord(ImmutablePathRecord<T> currentRecord)
+	{
+		nodePath.put(currentRecord.getNode(), currentRecord.getNodeReachedThrough());
+	}
+
 	private void createPathRecords(T start)
 	{
 		for(T node:graph.getAllNodes())
-			pathTable.put(node, new PathRecord<T>(node, graph.getEdgesFor(node).size()));
-		pathTable.get(start).updateRecord(start, 0);
+			if(node != start)
+				nodes.add(new ImmutablePathRecord<T>(node));
 	}
 
 	@Override
@@ -57,30 +71,32 @@ public class PathFinder<T> implements GraphExplorer<T>
 	
 	private void setupDataStructures()
 	{
-		pathTable = new HashMap<T, PathRecord<T>>();
+		nodePath = new ConcurrentHashMap<T, T>(graph.size());
 		visitedNodes = new HashSet<T>(graph.size());
+		nodes = new PriorityBlockingQueue<ImmutablePathRecord<T>>();
 	}
 	
-	private void updateEdges(T currentNode)
+	private void updateEdges(ImmutablePathRecord<T> currentRecord)
 	{
-		int currentWeight = pathTable.get(currentNode).getCurrentWeight();
-		List<Edge<T>> connectingEdges = graph.getEdgesFor(currentNode);
+		int currentWeight = currentRecord.getWeight();
+		List<Edge<T>> connectingEdges = graph.getEdgesFor(currentRecord.getNode());
 		for(Edge<T> edge:connectingEdges)
 		{
 			int newWeightForNode = currentWeight + edge.getWeight();
-			pathTable.get(edge.getDestination()).updateRecord(currentNode, newWeightForNode);
+			nodes.add(new ImmutablePathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
 		}
+		
 	}
 
-	private List<Edge<T>> buildPath(Map<T, PathRecord<T>> pathTable, T start, T end)
+	private List<Edge<T>> buildPath(T start, T end)
 	{
-		if(!pathTable.containsKey(end))
+		if(!nodePath.containsKey(end))
 			throw new IllegalStateException("Graph does not have a path from " + start + " to " + end);
 		List<Edge<T>> path = new LinkedList<Edge<T>>();
 		T node = end;
 		while(!node.equals(start))
 		{
-			T cameFrom = pathTable.get(node).getNodeReachedThrough();
+			T cameFrom = nodePath.get(node);
 			path.add(graph.getEdgeBetween(node, cameFrom));
 			node = cameFrom;
 		}
@@ -128,12 +144,13 @@ public class PathFinder<T> implements GraphExplorer<T>
 		return false;
 	}
 
-	private T getNextNode()
+	private ImmutablePathRecord<T> getNextNode()
 	{
-		PathRecord<T> currentLowest = new PathRecord<T>(null, 0);
-		for(PathRecord<T> record :pathTable.values())
- 			if(record.compareTo(currentLowest) <= 0 && !visitedNodes.contains(record.getNode()))
-				currentLowest = record;
-		return currentLowest.getNode();
+		ImmutablePathRecord<T> next;
+		do
+		{
+			next = nodes.poll();
+		}while(visitedNodes.contains(next.getNode()) && !nodes.isEmpty());
+		return next;
 	}
 }
