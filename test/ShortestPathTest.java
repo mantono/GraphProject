@@ -15,87 +15,35 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import org.jgrapht.traverse.DepthFirstIterator;
 import org.jgrapht.traverse.GraphIterator;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import alda.graphProject.ConcurrentGraph;
+import alda.graphProject.ConcurrentPathFinder;
 import alda.graphProject.Edge;
 import alda.graphProject.Graph;
 import alda.graphProject.GraphExplorer;
+import alda.graphProject.GraphGenerator;
 import alda.graphProject.PathFinder;
 
 public class ShortestPathTest
 {
 	Graph<String> graph;
 	GraphExplorer<String> explorer;
-	org.jgrapht.graph.AbstractGraph<String, Integer> oracle;
+	GraphGenerator gg;
 
 	@Before
 	public void setup()
 	{
 		graph = new ConcurrentGraph<String>();
+		gg = new GraphGenerator();
 		explorer = new PathFinder<String>(graph);
-		oracle = new SimpleWeightedGraph<String, Integer>(Integer.class);
-	}
-
-	private String createRandomConnectedGraph(int nodes, int edges, int maxWeight)
-	{
-		SecureRandom rand = new SecureRandom();
-		createNodes(nodes);
-		
-		List<String> connectedNodes = new ArrayList<String>(nodes/2);
-		connectedNodes.add("node0");
-		
-		while(edges > 0)
-		{
-			String randomNode1 = getRandomConnctedNode(connectedNodes, rand.nextInt(nodes));
-			String randomNode2 = "node" + rand.nextInt(nodes);
-			int weight = rand.nextInt(maxWeight) + 1;
-			if(!randomNode1.equals(randomNode2))
-			{
-				graph.connect(randomNode1, randomNode2, weight);
-				oracle.addEdge(randomNode1, randomNode2, weight);
-				oracle.addEdge(randomNode2, randomNode1, weight);
-				connectedNodes.add(randomNode2);
-				edges--;
-			}
-		}
-		System.out.println("Graph created with " + nodes + " nodes");
-		return getRandomConnctedNode(connectedNodes, rand.nextInt(nodes));
 	}
 	
 	private void createNodes(int amount)
 	{
 		for(int i = 0; i < amount; i++)
-		{
 			graph.add("node" + i);
-			oracle.addVertex("node" + i);
-		}
-	}
-
-	private String getRandomConnctedNode(List<String> connectedNodes, int nextInt)
-	{
-		
-		return connectedNodes.get(nextInt % connectedNodes.size());
-	}
-
-	@Test
-	public void testSmallRandomGraphWithOracle()
-	{
-		final String start = "node0";
-		final String end = createRandomConnectedGraph(15, 25, 10);
-		int pathLength = explorer.getTotalWeight(start, end);
-
-		System.out.println(start + " --> " + end);
-		printGraph();
-	}
-	
-	@Test
-	public void testBigRandomGraphWithOracle()
-	{
-		// 80 000 noder med 30 000 edges tar ca 280 sekunder för att hitta snabbaste vägen (med JGraphT-orakel) - 275 sekunder utan?!
-		final String start = "node0";
-		final String end = createRandomConnectedGraph(5000, 2000, 20);
-		int pathLength = explorer.getTotalWeight(start, end);
 	}
 	
 	@Test
@@ -123,6 +71,12 @@ public class ShortestPathTest
 		
 		PathFinder<String> explorer = new PathFinder<String>(graph);
 		assertEquals(14, explorer.getTotalWeight("B", "E"));
+
+		int result = explorer.getTotalWeight("C", "F");
+		assertEquals(4, result);
+		
+		result = explorer.getTotalWeight("A", "G");
+		assertEquals(9, result);
 	}
 	
 	@Test
@@ -200,6 +154,10 @@ public class ShortestPathTest
 		graph.connect("node23", "node9", 8);
 		graph.connect("node0", "node49", 8);
 		graph.connect("node11", "node42", 3);
+		graph.connect("node13", "node30", 14);
+		graph.connect("node13", "node43", 1);
+		graph.connect("node13", "node48", 11);
+		graph.connect("node48", "node46", 9);
 		
 		int sum = explorer.getTotalWeight("node11", "node7");
 		assertEquals(189, sum);
@@ -208,28 +166,24 @@ public class ShortestPathTest
 	@Test
 	public void stressTestWithNoAsserts()
 	{
-		for(int i = 0; i < 100; i++)
+		for(int i = 0; i < 50; i++)
 		{
-			int m = (i/20)+1;
-			createRandomConnectedGraph(1000*m, 3000*m, 100);
+			int m = (i/4)+1;
+			graph = gg.generateConnectedGraph(1000*m, 3000*m, 100);
+			explorer = new PathFinder<String>(graph);
 			explorer.getShortestPath("node0", "node800");
+			assertTrue(explorer.hasPath("node0", "node500"));
 		}
 	}
 	
-	private void printGraph()
+	
+	@Test
+	public void testHugeGraphWithNoAsserts()
 	{
-		Set<String> nodes = graph.getAllNodes();
-		System.out.println("graph data\n{");
-		for(String node:nodes)
-		{
-			List<Edge<String>> edges = graph.getEdgesFor(node);
-			for(Edge<String> edge:edges)
-			{
-				if(edge.getDestination().compareTo(node) < 0)
-					System.out.println(node + " -- " + edge.getDestination() + "[label=" + edge.getWeight() + "];");
-			}
-		}
-		System.out.println("}");
+		graph = gg.generateConnectedGraph(2_000_000, 2_270_000, 100);
+		explorer = new PathFinder<String>(graph);
+		List<Edge<String>> result = explorer.getShortestPath("node0", "node400000");
+		System.out.println(result);
 	}
 
 }

@@ -10,6 +10,8 @@ public class PathRecord<T> implements Comparable<PathRecord<T>>
 	{
 		this.node = node;
 		this.reachedThrough = reachedThrough;
+		if(weight < 0)
+			throw new IllegalArgumentException("Weight must not be negative!");
 		this.weight = weight;
 	}
 	
@@ -38,5 +40,11 @@ public class PathRecord<T> implements Comparable<PathRecord<T>>
 	public int compareTo(PathRecord<T> other)
 	{
 		return this.weight - other.weight;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return reachedThrough + "--" + weight + "-->" + node;
 	}
 }

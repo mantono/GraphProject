@@ -19,50 +19,59 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	private Set<T> visitedNodes; //TODO Kolla om volatile behövs eller inte. Data kan bli osynkrioniserad mellan trådar, men skadar det algoritmen?
 	private Queue<PathRecord<T>> nodes;
 	private ConcurrentMap<T, T> nodePath;
+	private ConcurrentMap<T, Integer> nodeWeight;
 	
 	public ConcurrentPathFinder(Graph<T> graph)
 	{
 		this.graph = graph;
 	}
+	
+	private void setupDataStructures()
+	{
+		nodePath = new ConcurrentHashMap<T, T>(graph.size());
+		nodeWeight = new ConcurrentHashMap<T, Integer>(graph.size());
+		visitedNodes = new HashSet<T>(graph.size());
+		nodes = new PriorityBlockingQueue<PathRecord<T>>();
+	}
 
 	@Override
 	public List<Edge<T>> getShortestPath(T start, T end)
 	{
-		final int numberOfNodes = graph.size();
+		checkIfValidGraph(start, end);
 		setupDataStructures();
-		createPathRecords(start);
+		createWeightRecords(start);
 		PathRecord<T> currentRecord = new PathRecord<T>(start, start, 0);
-		Runnable first = new Thread(new ThreadRunner(currentRecord, numberOfNodes));
-		Runnable second = new Thread(new ThreadRunner(currentRecord, numberOfNodes));
-		Runnable third = new Thread(new ThreadRunner(currentRecord, numberOfNodes));
-		first.run();
-		second.run();
-		third.run();
-		while(visitedNodes.size() < numberOfNodes)
+		nodes.add(currentRecord);
+		while(!nodes.isEmpty())
 		{
-			try
-			{
-				Thread.sleep(400);
-			}
-			catch(InterruptedException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			currentRecord = getNextNode();
+			updateEdges(currentRecord);
+			visitedNodes.add(currentRecord.getNode());
 		}
+		assert visitedNodes.size() == graph.size() : "Only visited " + visitedNodes.size() + " out of " + graph.size();
 		return buildPath(start, end);
 	}
 	
-	private void writePathRecord(PathRecord<T> currentRecord)
+	private void checkIfValidGraph(T start, T end)
 	{
-		nodePath.put(currentRecord.getNode(), currentRecord.getNodeReachedThrough());
+		if(graph.size() == 0)
+			throw new IllegalStateException("Graph does not have any nodes!");
+		if(graph.getNumberOfEdges() == 0)
+			throw new IllegalStateException("Graph does not have any edges!");
+		if(!graph.getAllNodes().contains(start))
+			throw new IllegalArgumentException("Start node " + start + " is not in the graph.");
+		if(!graph.getAllNodes().contains(end))
+			throw new IllegalArgumentException("Start node " + end + " is not in the graph.");
+		if(!hasPath(start, end))
+			throw new IllegalArgumentException("There is no path between " + start + " and " + end);
 	}
 
-	private void createPathRecords(T start)
+	private void createWeightRecords(T start)
 	{
+		nodeWeight.put(start, 0);
 		for(T node:graph.getAllNodes())
-			if(node != start)
-				nodes.add(new PathRecord<T>(node));
+			if(!node.equals(start))
+				nodeWeight.put(node, Integer.MAX_VALUE);
 	}
 
 	@Override
@@ -74,24 +83,29 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 			weight += edge.getWeight();
 		return weight;
 	}
-	
-	private void setupDataStructures()
-	{
-		nodePath = new ConcurrentHashMap<T, T>(graph.size());
-		visitedNodes = new HashSet<T>(graph.size());
-		nodes = new PriorityBlockingQueue<PathRecord<T>>();
-	}
-	
+
 	private void updateEdges(PathRecord<T> currentRecord)
 	{
-		int currentWeight = currentRecord.getWeight();
+		int currentWeight = nodeWeight.get(currentRecord.getNode());
 		List<Edge<T>> connectingEdges = graph.getEdgesFor(currentRecord.getNode());
 		for(Edge<T> edge:connectingEdges)
 		{
 			int newWeightForNode = currentWeight + edge.getWeight();
-			nodes.add(new PathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
+			if(updatePathRecord(currentRecord.getNode(), edge.getDestination(), newWeightForNode) && !visitedNodes.contains(edge.getDestination())) 
+				nodes.add(new PathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
+		}		
+	}
+
+	private boolean updatePathRecord(T node, T destination, int newWeightForNode)
+	{
+		int currentWeightForNode = nodeWeight.get(destination);
+		if(newWeightForNode < currentWeightForNode)
+		{
+			nodePath.put(destination, node);
+			nodeWeight.put(destination, newWeightForNode);
+			return true;
 		}
-		
+		return false;
 	}
 
 	private List<Edge<T>> buildPath(T start, T end)
@@ -103,6 +117,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		while(!node.equals(start))
 		{
 			T cameFrom = nodePath.get(node);
+			assert !node.equals(cameFrom) : node + " has a reference to itself. This should not be possible!";
 			path.add(graph.getEdgeBetween(node, cameFrom));
 			node = cameFrom;
 		}
@@ -162,25 +177,17 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	
 	class ThreadRunner implements Runnable
 	{
-		private final int numberOfNodes;
 		private PathRecord<T> currentRecord;
 		
-		ThreadRunner(PathRecord<T> firstRecord, int graphSize)
+		ThreadRunner(PathRecord<T> firstRecord)
 		{
 			this.currentRecord = firstRecord;
-			this.numberOfNodes = graphSize;
 		}
 
 		@Override
 		public void run()
 		{
-			while(visitedNodes.size() < numberOfNodes)
-			{
-				visitedNodes.add(currentRecord.getNode());
-				updateEdges(currentRecord);
-				writePathRecord(currentRecord);
-				currentRecord = getNextNode();
-			}
+			
 		}
 		
 	}

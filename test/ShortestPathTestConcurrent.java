@@ -15,6 +15,7 @@ import alda.graphProject.ConcurrentPathFinder;
 import alda.graphProject.Edge;
 import alda.graphProject.Graph;
 import alda.graphProject.GraphExplorer;
+import alda.graphProject.GraphGenerator;
 import alda.graphProject.PathFinder;
 
 public class ShortestPathTestConcurrent
@@ -22,67 +23,24 @@ public class ShortestPathTestConcurrent
 	private Graph<String> graph;
 	private GraphExplorer<String> oracle;
 	private GraphExplorer<String> concurrent;
+	private GraphGenerator gg;
 	
 	@Before
 	public void setup()
 	{
+		gg = new GraphGenerator();
 		graph = new ConcurrentGraph<String>();
 		oracle = new PathFinder<String>(graph);
 		concurrent = new ConcurrentPathFinder<String>(graph);
 	}
 	
-	private void printGraph()
-	{
-		Set<String> nodes = graph.getAllNodes();
-		System.out.println("graph data\n{");
-		for(String node:nodes)
-		{
-			List<Edge<String>> edges = graph.getEdgesFor(node);
-			for(Edge<String> edge:edges)
-			{
-				if(edge.getDestination().compareTo(node) < 0)
-					System.out.println(node + " -- " + edge.getDestination() + "[label=" + edge.getWeight() + "];");
-			}
-		}
-		System.out.println("}");
-	}
-	
-	private String createRandomConnectedGraph(int nodes, int edges, int maxWeight)
-	{
-		SecureRandom rand = new SecureRandom();
-		createNodes(nodes);
-		
-		List<String> connectedNodes = new ArrayList<String>(nodes/2);
-		connectedNodes.add("node0");
-		
-		while(edges > 0)
-		{
-			String randomNode1 = getRandomConnctedNode(connectedNodes, rand.nextInt(nodes));
-			String randomNode2 = "node" + rand.nextInt(nodes);
-			int weight = rand.nextInt(maxWeight) + 1;
-			if(!randomNode1.equals(randomNode2))
-			{
-				graph.connect(randomNode1, randomNode2, weight);
-				connectedNodes.add(randomNode2);
-				edges--;
-			}
-		}
-		System.out.println("Graph created with " + nodes + " nodes");
-		return getRandomConnctedNode(connectedNodes, rand.nextInt(nodes));
-	}
 	
 	private void createNodes(int amount)
 	{
 		for(int i = 0; i < amount; i++)
 			graph.add("node" + i);
 	}
-
-	private String getRandomConnctedNode(List<String> connectedNodes, int nextInt)
-	{
-		
-		return connectedNodes.get(nextInt % connectedNodes.size());
-	}
-
+	
 	@Test
 	public void testSimpleOneWayGraph()
 	{
@@ -219,6 +177,10 @@ public class ShortestPathTestConcurrent
 		graph.connect("node23", "node9", 8);
 		graph.connect("node0", "node49", 8);
 		graph.connect("node11", "node42", 3);
+		graph.connect("node13", "node30", 14);
+		graph.connect("node13", "node43", 1);
+		graph.connect("node13", "node48", 11);
+		graph.connect("node48", "node46", 9);
 		
 		List<Edge<String>> oraclePath = oracle.getShortestPath("node11", "node7");
 		List<Edge<String>> concurrentPath = concurrent.getShortestPath("node11", "node7");
@@ -228,15 +190,20 @@ public class ShortestPathTestConcurrent
 	@Test
 	public void testBigGraphAndMeasurePerformance()
 	{
-		createRandomConnectedGraph(10000, 20000, 30);
-		final long oracleTimeStart = System.nanoTime();
-		List<Edge<String>> oraclePath = oracle.getShortestPath("node11", "node500");
-		final long oracleTimeFinished = System.nanoTime();
+		graph = gg.generateConnectedGraph(100_000, 200_000, 300);
+		concurrent = new ConcurrentPathFinder<String>(graph);
+		oracle = new PathFinder<String>(graph);
+		
 		final long concurrentTimeStart = System.nanoTime();
 		List<Edge<String>> concurrentPath = concurrent.getShortestPath("node11", "node500");
 		final long concurrentTimeFinished = System.nanoTime();
-		final long oracleTime = oracleTimeFinished - oracleTimeStart;
+		
+		final long oracleTimeStart = System.nanoTime();
+		List<Edge<String>> oraclePath = oracle.getShortestPath("node11", "node500");
+		final long oracleTimeFinished = System.nanoTime();
+		
 		final long concurrentTime = concurrentTimeFinished - concurrentTimeStart;
+		final long oracleTime = oracleTimeFinished - oracleTimeStart;
 		
 		System.out.println("Elapsed time oracle: " + oracleTime);
 		System.out.println("Elapsed time concurrent: " + concurrentTime);
@@ -254,8 +221,10 @@ public class ShortestPathTestConcurrent
 		for(int i = 0; i < 50; i++)
 		{
 			int m = (i/4)+1;
-			createRandomConnectedGraph(1000*m, 2000*m, 100);
-			concurrent.getShortestPath("node0", "node800");
+			concurrent = new ConcurrentPathFinder<String>(gg.generateConnectedGraph(1000*m, 2000*m, 100));
+			oracle = new ConcurrentPathFinder<String>(gg.generateConnectedGraph(1000*m, 2000*m, 100));
+			assertTrue(oracle.hasPath("node0", "node500"));
+			concurrent.getShortestPath("node0", "node500");
 		}
 	}
 
