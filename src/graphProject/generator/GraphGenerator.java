@@ -1,4 +1,8 @@
-package alda.graphProject;
+package graphProject.generator;
+
+import graphProject.Edge;
+import graphProject.Graph;
+import graphProject.concurrent.ConcurrentGraph;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;

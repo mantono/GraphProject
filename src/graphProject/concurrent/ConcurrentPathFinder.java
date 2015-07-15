@@ -1,11 +1,15 @@
-package alda.graphProject;
+package graphProject.concurrent;
+
+import graphProject.Edge;
+import graphProject.Graph;
+import graphProject.GraphExplorer;
+import graphProject.PathRecord;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -20,6 +24,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	private Queue<PathRecord<T>> nodes;
 	private ConcurrentMap<T, T> nodePath;
 	private ConcurrentMap<T, Integer> nodeWeight;
+	private int threads = 1;
 	
 	public ConcurrentPathFinder(Graph<T> graph)
 	{
@@ -47,6 +52,18 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 			currentRecord = getNextNode();
 			updateEdges(currentRecord);
 			visitedNodes.add(currentRecord.getNode());
+		}
+		while(visitedNodes.size() < graph.size())
+		{
+			try
+			{
+				Thread.sleep(50);
+			}
+			catch(InterruptedException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		assert visitedNodes.size() == graph.size() : "Only visited " + visitedNodes.size() + " out of " + graph.size();
 		return buildPath(start, end);
@@ -88,11 +105,17 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	{
 		int currentWeight = nodeWeight.get(currentRecord.getNode());
 		List<Edge<T>> connectingEdges = graph.getEdgesFor(currentRecord.getNode());
+		int i = 0;
 		for(Edge<T> edge:connectingEdges)
 		{
 			int newWeightForNode = currentWeight + edge.getWeight();
-			if(updatePathRecord(currentRecord.getNode(), edge.getDestination(), newWeightForNode) && !visitedNodes.contains(edge.getDestination())) 
-				nodes.add(new PathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
+			if(updatePathRecord(currentRecord.getNode(), edge.getDestination(), newWeightForNode) && !visitedNodes.contains(edge.getDestination()))
+			{
+				if(threads < 4 && i++ % 2 == 1)
+					(new Thread(new ThreadRunner(new PathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode)))).start();
+				else
+					nodes.add(new PathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
+			}
 		}		
 	}
 
@@ -178,17 +201,31 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	class ThreadRunner implements Runnable
 	{
 		private PathRecord<T> currentRecord;
+		private Queue<PathRecord<T>> queue = new PriorityQueue<PathRecord<T>>();
 		
 		ThreadRunner(PathRecord<T> firstRecord)
 		{
-			this.currentRecord = firstRecord;
+			//this.currentRecord = firstRecord;
+			queue.add(firstRecord);
 		}
 
 		@Override
 		public void run()
 		{
-			
+			while(!queue.isEmpty())
+			{
+				currentRecord = getNextNode();
+				updateEdges(currentRecord);
+				visitedNodes.add(currentRecord.getNode());
+			}
 		}
 		
+	}
+
+	@Override
+	public Graph<T> getMinimumSpanningTree()
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

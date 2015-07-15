@@ -1,21 +1,15 @@
-package alda.graphProject.test;
+package graphProject.test;
 
 import static org.junit.Assert.*;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.jgrapht.graph.SimpleWeightedGraph;
-import org.jgrapht.traverse.DepthFirstIterator;
-import org.jgrapht.traverse.GraphIterator;
 import org.junit.Before;
 import org.junit.Test;
 
-import alda.graphProject.ConcurrentGraph;
-import alda.graphProject.Graph;
-import alda.graphProject.GraphExplorer;
-import alda.graphProject.PathFinder;
+import graphProject.*;
+import graphProject.concurrent.ConcurrentGraph;
 
 public class DepthFirstSearchTest
 {

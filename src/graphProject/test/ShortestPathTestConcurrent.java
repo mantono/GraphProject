@@ -1,22 +1,19 @@
-package alda.graphProject.test;
+package graphProject.test;
 
 import static org.junit.Assert.*;
 
-import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import alda.graphProject.ConcurrentGraph;
-import alda.graphProject.ConcurrentPathFinder;
-import alda.graphProject.Edge;
-import alda.graphProject.Graph;
-import alda.graphProject.GraphExplorer;
-import alda.graphProject.GraphGenerator;
-import alda.graphProject.PathFinder;
+import graphProject.Edge;
+import graphProject.Graph;
+import graphProject.GraphExplorer;
+import graphProject.PathFinder;
+import graphProject.concurrent.ConcurrentGraph;
+import graphProject.concurrent.ConcurrentPathFinder;
+import graphProject.generator.GraphGenerator;
 
 public class ShortestPathTestConcurrent
 {

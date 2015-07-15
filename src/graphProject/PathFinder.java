@@ -1,4 +1,4 @@
-package alda.graphProject;
+package graphProject;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -174,5 +174,15 @@ public class PathFinder<T> implements GraphExplorer<T>
 			next = nodes.poll();
 		}while(!nodes.isEmpty() && visitedNodes.contains(next.getNode()));
 		return next;
+	}
+
+
+	@Override
+	public Graph<T> getMinimumSpanningTree()
+	{
+		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>();
+		//edges.add(graph.g);
+		//TODO skriv färdigt
+		return null;
 	}
 }

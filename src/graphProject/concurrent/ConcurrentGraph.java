@@ -1,4 +1,7 @@
-package alda.graphProject;
+package graphProject.concurrent;
+
+import graphProject.Edge;
+import graphProject.Graph;
 
 import java.util.ArrayList;
 import java.util.Iterator;

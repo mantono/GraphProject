@@ -1,4 +1,4 @@
-package alda.graphProject;
+package graphProject;
 
 import java.util.List;
 
@@ -8,4 +8,5 @@ public interface GraphExplorer<T>
 	boolean hasPath(T start, T end);
 	int getTotalWeight(T start, T end);
 	List<Edge<T>> getShortestPath(T start, T end);
+	Graph<T> getMinimumSpanningTree();
 }

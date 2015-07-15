@@ -1,4 +1,4 @@
-package alda.graphProject;
+package graphProject;
 
 public class PathRecord<T> implements Comparable<PathRecord<T>>
 {
@@ -6,7 +6,7 @@ public class PathRecord<T> implements Comparable<PathRecord<T>>
 	private final int weight;
 	private final T reachedThrough;
 	
-	PathRecord(T node, T reachedThrough, int weight)
+	public PathRecord(T node, T reachedThrough, int weight)
 	{
 		this.node = node;
 		this.reachedThrough = reachedThrough;
@@ -15,13 +15,13 @@ public class PathRecord<T> implements Comparable<PathRecord<T>>
 		this.weight = weight;
 	}
 	
-	PathRecord(T node)
+	public PathRecord(T node)
 	{
 		this.reachedThrough = this.node = node;
 		this.weight = Integer.MAX_VALUE;
 	}
 	
-	T getNode()
+	public T getNode()
 	{
 		return node;
 	}

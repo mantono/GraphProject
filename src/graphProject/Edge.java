@@ -1,4 +1,4 @@
-package alda.graphProject;
+package graphProject;
 
 public class Edge<T> implements Comparable<Edge<T>>
 {

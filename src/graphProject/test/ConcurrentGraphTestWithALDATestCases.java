@@ -1,4 +1,4 @@
-package alda.graphProject.test;
+package graphProject.test;
 
 import static org.junit.Assert.*;
 
@@ -9,10 +9,10 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import alda.graphProject.Graph;
-import alda.graphProject.ConcurrentGraph;
-import alda.graphProject.GraphExplorer;
-import alda.graphProject.PathFinder;
+import graphProject.Graph;
+import graphProject.GraphExplorer;
+import graphProject.PathFinder;
+import graphProject.concurrent.ConcurrentGraph;
 
 public class ConcurrentGraphTestWithALDATestCases
 {

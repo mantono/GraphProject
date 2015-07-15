@@ -1,4 +1,4 @@
-package alda.graphProject;
+package graphProject;
 
 import java.util.List;
 import java.util.Set;

@@ -1,17 +1,15 @@
-package alda.graphProject.test;
+package graphProject.test;
 
 import static org.junit.Assert.*;
 
 import java.util.List;
-import java.util.Set;
 import java.util.NoSuchElementException;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import alda.graphProject.ConcurrentGraph;
-import alda.graphProject.Edge;
-import alda.graphProject.Graph;
+import graphProject.*;
+import graphProject.concurrent.ConcurrentGraph;
 
 public class ConcurrentGraphTest
 {

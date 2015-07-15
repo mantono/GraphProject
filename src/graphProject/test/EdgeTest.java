@@ -1,8 +1,8 @@
-package alda.graphProject.test;
+package graphProject.test;
 
 import static org.junit.Assert.*;
 
-import alda.graphProject.Edge;
+import graphProject.Edge;
 import org.junit.Before;
 import org.junit.Test;
 
