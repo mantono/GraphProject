@@ -1,5 +1,8 @@
 package graphProject;
 
+import graphProject.concurrent.ConcurrentGraph;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +13,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+
+import javax.swing.text.html.MinimalHTMLWriter;
 
 public class PathFinder<T> implements GraphExplorer<T>
 {
@@ -180,9 +185,54 @@ public class PathFinder<T> implements GraphExplorer<T>
 	@Override
 	public Graph<T> getMinimumSpanningTree()
 	{
-		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>();
-		//edges.add(graph.g);
-		//TODO skriv färdigt
+		setupDataStructures();
+		Graph<T> mst = new ConcurrentGraph<T>();
+		T currentNode = graph.getNodeWithLeastEdges();
+		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>(graph.getEdgesFor(currentNode));
+		final int nodesInCompleteGraph = graph.getNumberOfNodes();
+		
+		while(mst.getNumberOfNodes() < nodesInCompleteGraph)
+		{
+			mst.add(currentNode);
+			Edge<T> edge = null;
+			do
+			{
+				edge = edges.poll();
+			}while(mst.contains(edge.getDestination()));
+			mst.connect(currentNode, edge.getDestination(), edge.getWeight());
+			currentNode = edge.getDestination();
+		}
+		
+		return mst;
+	}
+
+
+	@Override
+	public List<Edge<T>> getPathAllNodes()
+	{
+		setupDataStructures();
+		List<Edge<T>> path = new ArrayList<Edge<T>>(visitedNodes.size());
+		Graph<T> mst = getMinimumSpanningTree();
+		T currentNode = mst.getNodeWithLeastEdges();
+		while(visitedNodes.size() != mst.getNumberOfNodes())
+		{
+			visitedNodes.add(currentNode);
+			Edge<T> nextEdge = getNextEdge(currentNode, visitedNodes, mst);
+			path.add(nextEdge);
+			currentNode = nextEdge.getDestination();
+		}
+		
+		return path;
+	}
+
+	private Edge<T> getNextEdge(final T currentNode, Set<T> visitedNodes, Graph<T> mst)
+	{
+		List<Edge<T>> possibleEdges = mst.getEdgesFor(currentNode);
+		if(possibleEdges.size() == 1)
+			return possibleEdges.get(0);
+		for(Edge<T> edge : possibleEdges)
+			if(!visitedNodes.contains(edge.getDestination()))
+				return edge;
 		return null;
 	}
 }

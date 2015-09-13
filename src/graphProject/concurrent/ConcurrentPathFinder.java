@@ -5,6 +5,7 @@ import graphProject.Graph;
 import graphProject.GraphExplorer;
 import graphProject.PathRecord;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -225,7 +226,50 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	@Override
 	public Graph<T> getMinimumSpanningTree()
 	{
-		// TODO Auto-generated method stub
+		setupDataStructures();
+		Graph<T> mst = new ConcurrentGraph<T>(graph.getAllNodes());
+		T currentNode = graph.getNodeWithLeastEdges();
+		int edgesInMinimumSpanningTree = 0;
+		final int nodesInCompleteGraph = graph.getNumberOfNodes();
+		while(edgesInMinimumSpanningTree < nodesInCompleteGraph)
+		{
+			Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>(graph.getEdgesFor(currentNode));
+			final Edge<T> edge = edges.poll();
+			if(mst.connect(currentNode, edge.getDestination(), edge.getWeight()))
+				edgesInMinimumSpanningTree++;
+			currentNode = edge.getDestination();
+		}
+		
+		return mst;
+	}
+
+
+	@Override
+	public List<Edge<T>> getPathAllNodes()
+	{
+		setupDataStructures();
+		List<Edge<T>> path = new ArrayList<Edge<T>>(visitedNodes.size());
+		Graph<T> mst = getMinimumSpanningTree();
+		T currentNode = mst.getNodeWithLeastEdges();
+		while(visitedNodes.size() != mst.getNumberOfNodes())
+		{
+			visitedNodes.add(currentNode);
+			Edge<T> nextEdge = getNextEdge(currentNode, visitedNodes, mst);
+			path.add(nextEdge);
+			currentNode = nextEdge.getDestination();
+		}
+		
+		return path;
+	}
+	
+	private Edge<T> getNextEdge(final T currentNode, Set<T> visitedNodes, Graph<T> mst)
+	{
+		List<Edge<T>> possibleEdges = mst.getEdgesFor(currentNode);
+		if(possibleEdges.size() == 1)
+			return possibleEdges.get(0);
+		for(Edge<T> edge : possibleEdges)
+			if(!visitedNodes.contains(edge.getDestination()))
+				return edge;
 		return null;
 	}
 }

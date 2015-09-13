@@ -4,6 +4,8 @@ import graphProject.Edge;
 import graphProject.Graph;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
@@ -14,6 +16,16 @@ import java.util.Set;
 public class ConcurrentGraph<T> implements Graph<T>
 {
 	private final Map<T, List<Edge<T>>> nodeConnections = new HashMap<T, List<Edge<T>>>();
+	
+	public ConcurrentGraph(Collection<T> nodes)
+	{
+		for(T node : nodes)
+			nodeConnections.put(node, new ArrayList<Edge<T>>());
+	}
+
+	public ConcurrentGraph()
+	{
+	}
 
 	@Override
 	public boolean add(T data)
@@ -181,5 +193,35 @@ public class ConcurrentGraph<T> implements Graph<T>
 	public Set<T> getAllNodes()
 	{
 		return nodeConnections.keySet();
+	}
+
+	@Override
+	public int getNumberOfNodes()
+	{
+		return nodeConnections.size();
+	}
+
+	@Override
+	public T getNodeWithLeastEdges()
+	{
+		int lowestAmountOfEdges = Integer.MAX_VALUE;
+		T nodeWitLowestAmountOfEdges = null;
+		for(T node : nodeConnections.keySet())
+		{
+			final int numberOfEdges = nodeConnections.get(node).size();
+			if(numberOfEdges < lowestAmountOfEdges)
+				nodeWitLowestAmountOfEdges = node;
+		}
+		
+		return nodeWitLowestAmountOfEdges;
+	}
+
+	@Override
+	public Set<Edge<T>> getAllEdges()
+	{
+		Set<Edge<T>> allEdges = new HashSet<Edge<T>>();
+		for(List<Edge<T>> edges : nodeConnections.values())
+			allEdges.addAll(edges);
+		return allEdges;
 	}
 }

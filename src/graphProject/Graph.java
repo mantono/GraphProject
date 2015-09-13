@@ -18,5 +18,8 @@ public interface Graph<T>
 	Edge<T> getEdgeBetween(T node1, T node2);
 	int size();
 	int getNumberOfEdges();
+	int getNumberOfNodes();
 	void clear();
+	T getNodeWithLeastEdges();
+	Set<Edge<T>> getAllEdges();
 }
