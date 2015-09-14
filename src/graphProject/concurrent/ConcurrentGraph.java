@@ -15,12 +15,13 @@ import java.util.Set;
 
 public class ConcurrentGraph<T> implements Graph<T>
 {
-	private final Map<T, List<Edge<T>>> nodeConnections = new HashMap<T, List<Edge<T>>>();
+	//private final Map<T, List<Edge<T>>> nodeConnections = new HashMap<T, List<Edge<T>>>();
+	private final Set<T> nodes = new HashSet<T>();
+	private final Set<T> edges = new HashSet<T>();
 	
 	public ConcurrentGraph(Collection<T> nodes)
 	{
-		for(T node : nodes)
-			nodeConnections.put(node, new ArrayList<Edge<T>>());
+		this.nodes.addAll(nodes);
 	}
 
 	public ConcurrentGraph()
@@ -30,20 +31,16 @@ public class ConcurrentGraph<T> implements Graph<T>
 	@Override
 	public boolean add(T data)
 	{
-		if(nodeConnections.containsKey(data))
-			return false;
-		nodeConnections.put(data, new ArrayList<Edge<T>>());
-		return true;
+		return nodes.add(data);
 	}
 
 	@Override
 	public boolean remove(T data)
 	{
-		if(!nodeConnections.containsKey(data))
+		if(!nodes.contains(data))
 			return false;
 		removeConnectionsTo(data);
-		nodeConnections.remove(data);
-		return true;
+		return nodes.remove(data);
 	}
 	
 	private void removeConnectionsTo(T data)
@@ -56,7 +53,7 @@ public class ConcurrentGraph<T> implements Graph<T>
 	@Override
 	public boolean contains(T data)
 	{
-		return nodeConnections.containsKey(data);
+		return nodes.contains(data);
 	}
 
 	@Override
