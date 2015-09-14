@@ -197,7 +197,8 @@ public class PathFinder<T> implements GraphExplorer<T>
 			Edge<T> edge = null;
 			do
 			{
-				edge = edges.poll();
+				if(!edges.isEmpty())
+					edge = edges.poll();
 			}while(mst.contains(edge.getDestination()));
 			mst.connect(currentNode, edge.getDestination(), edge.getWeight());
 			currentNode = edge.getDestination();
