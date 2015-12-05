@@ -54,6 +54,7 @@ public class MinimumSpanningTreeTest
 		
 		PathFinder<String> explorer = new PathFinder<String>(graph);
 		Graph<String> mst = explorer.getMinimumSpanningTree();
+		assertEquals(7, mst.size());
 		assertEquals(6, mst.getNumberOfEdges());
 	}
 

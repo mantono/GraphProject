@@ -3,6 +3,7 @@ package graphProject.concurrent;
 import graphProject.Edge;
 import graphProject.Graph;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -13,8 +14,12 @@ import java.util.Map;
 import java.util.Set;
 
 
-public class ConcurrentGraph<T> implements Graph<T>
+public class ConcurrentGraph<T> implements Graph<T>, Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2473878382917498580L;
 	//private final Map<T, List<Edge<T>>> nodeConnections = new HashMap<T, List<Edge<T>>>();
 	private final Set<T> nodes = new HashSet<T>();
 	private final Set<Edge<T>> edges = new HashSet<Edge<T>>();
@@ -95,10 +100,7 @@ public class ConcurrentGraph<T> implements Graph<T>
 		if(isConnected(start, end))
 			changeWeight(start, end, weight);
 		else
-		{
 			createEdge(start, end, weight);
-			createEdge(end, start, weight);
-		}
 		return true;
 	}
 	
@@ -188,13 +190,7 @@ public class ConcurrentGraph<T> implements Graph<T>
 	{
 		return nodes;
 	}
-
-	@Override
-	public int getNumberOfNodes()
-	{
-		return nodes.size();
-	}
-
+	
 	@Override
 	public T getNodeWithLeastEdges()
 	{

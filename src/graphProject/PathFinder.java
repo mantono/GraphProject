@@ -187,21 +187,29 @@ public class PathFinder<T> implements GraphExplorer<T>
 	{
 		setupDataStructures();
 		Graph<T> mst = new ConcurrentGraph<T>();
-		T currentNode = graph.getNodeWithLeastEdges();
-		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>(graph.getEdgesFor(currentNode));
-		final int nodesInCompleteGraph = graph.getNumberOfNodes();
+		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>(graph.getAllEdges());
+		final int nodesInCompleteGraph = graph.size();
 		
-		while(mst.getNumberOfNodes() < nodesInCompleteGraph)
+		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph)
 		{
-			mst.add(currentNode);
-			Edge<T> edge = null;
-			do
+			Edge<T> edge = edges.poll();
+			final T source = edge.getSource();
+			final T destination = edge.getDestination();
+			if(!mst.isConnected(source, destination))
 			{
-				if(!edges.isEmpty())
-					edge = edges.poll();
-			}while(mst.contains(edge.getDestination()));
-			mst.connect(currentNode, edge.getDestination(), edge.getWeight());
-			currentNode = edge.getDestination();
+				mst.add(source);
+				mst.add(destination);
+				mst.connect(edge.getSource(), edge.getDestination(), edge.getWeight());
+			}
+//			mst.add(currentNode);
+//			Edge<T> edge = null;
+//			do
+//			{
+//				if(!edges.isEmpty())
+//					edge = edges.poll();
+//			}while(mst.contains(edge.getDestination()));
+//			mst.connect(currentNode, edge.getDestination(), edge.getWeight());
+//			currentNode = edge.getDestination();
 		}
 		
 		return mst;
@@ -215,7 +223,7 @@ public class PathFinder<T> implements GraphExplorer<T>
 		List<Edge<T>> path = new ArrayList<Edge<T>>(visitedNodes.size());
 		Graph<T> mst = getMinimumSpanningTree();
 		T currentNode = mst.getNodeWithLeastEdges();
-		while(visitedNodes.size() != mst.getNumberOfNodes())
+		while(visitedNodes.size() != mst.size())
 		{
 			visitedNodes.add(currentNode);
 			Edge<T> nextEdge = getNextEdge(currentNode, visitedNodes, mst);

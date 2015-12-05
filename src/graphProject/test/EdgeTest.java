@@ -17,7 +17,7 @@ public class EdgeTest
 	@Test(expected=IllegalArgumentException.class)
 	public void testIllegalConstruction()
 	{
-		new Edge<Long>(45L, 0);
+		new Edge<Long>(45L, 0L, 3);
 	}
 
 	@Test

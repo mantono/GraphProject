@@ -155,6 +155,12 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		List<T> visitedNodes = depthFirstSearch(start, end);
 		return visitedNodes.contains(end);
 	}
+	
+	@Override
+	public List<T> breadthFirstSearch(T start, T end)
+	{
+		return null;
+	}
 
 	@Override
 	public List<T> depthFirstSearch(T start, T end)
@@ -230,7 +236,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		Graph<T> mst = new ConcurrentGraph<T>(graph.getAllNodes());
 		T currentNode = graph.getNodeWithLeastEdges();
 		int edgesInMinimumSpanningTree = 0;
-		final int nodesInCompleteGraph = graph.getNumberOfNodes();
+		final int nodesInCompleteGraph = graph.size();
 		while(edgesInMinimumSpanningTree < nodesInCompleteGraph)
 		{
 			Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>(graph.getEdgesFor(currentNode));
@@ -251,7 +257,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		List<Edge<T>> path = new ArrayList<Edge<T>>(visitedNodes.size());
 		Graph<T> mst = getMinimumSpanningTree();
 		T currentNode = mst.getNodeWithLeastEdges();
-		while(visitedNodes.size() != mst.getNumberOfNodes())
+		while(visitedNodes.size() != mst.size())
 		{
 			visitedNodes.add(currentNode);
 			Edge<T> nextEdge = getNextEdge(currentNode, visitedNodes, mst);
