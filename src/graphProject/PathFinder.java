@@ -244,4 +244,12 @@ public class PathFinder<T> implements GraphExplorer<T>
 				return edge;
 		return null;
 	}
+
+
+	@Override
+	public List<T> breadthFirstSearch(T start, T end)
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

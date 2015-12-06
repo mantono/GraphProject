@@ -1,13 +1,15 @@
 package graphProject;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public interface Graph<T>
+public interface Graph<T> extends Collection<T>
 {
 	boolean add(T data);
-	boolean remove(T data);
-	boolean contains(T data);
+	boolean remove(Object data);
+	boolean contains(Object data);
 	int edgeSize(T data);
 	boolean isConnected(T start, T end);
 	boolean connect(T start, T end, int weight);
@@ -20,5 +22,5 @@ public interface Graph<T>
 	int getNumberOfEdges();
 	void clear();
 	T getNodeWithLeastEdges();
-	Set<Edge<T>> getAllEdges();
+	Map<T, List<Edge<T>>> getAllEdges();
 }
