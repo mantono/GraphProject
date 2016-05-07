@@ -1,4 +1,4 @@
-package graphProject.test;
+package graphProject.concurrent;
 
 import static org.junit.Assert.*;
 

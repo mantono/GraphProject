@@ -1,4 +1,4 @@
-package graphProject.test;
+package graphProject;
 
 import static org.junit.Assert.*;
 
@@ -7,53 +7,28 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import graphProject.Edge;
-import graphProject.Graph;
-import graphProject.GraphExplorer;
-import graphProject.PathFinder;
+import graphProject.*;
 import graphProject.concurrent.ConcurrentGraph;
-import graphProject.concurrent.ConcurrentPathFinder;
 import graphProject.generator.GraphGenerator;
 
-public class ShortestPathTestConcurrent
+public class ShortestPathTest
 {
-	private Graph<String> graph;
-	private GraphExplorer<String> oracle;
-	private GraphExplorer<String> concurrent;
-	private GraphGenerator gg;
-	
+	Graph<String> graph;
+	GraphExplorer<String> explorer;
+	GraphGenerator gg;
+
 	@Before
 	public void setup()
 	{
-		gg = new GraphGenerator();
 		graph = new ConcurrentGraph<String>();
-		oracle = new PathFinder<String>(graph);
-		concurrent = new ConcurrentPathFinder<String>(graph);
+		gg = new GraphGenerator();
+		explorer = new PathFinder<String>(graph);
 	}
-	
 	
 	private void createNodes(int amount)
 	{
 		for(int i = 0; i < amount; i++)
 			graph.add("node" + i);
-	}
-	
-	@Test
-	public void testSimpleOneWayGraph()
-	{
-		graph.add("A");
-		graph.add("B");
-		graph.add("C");
-		graph.add("D");
-		graph.add("E");
-		graph.connect("A", "B", 2);
-		graph.connect("B", "C", 4);
-		graph.connect("C", "D", 2);
-		graph.connect("D", "E", 2);
-		
-		List<Edge<String>> oraclePath = oracle.getShortestPath("A", "E");
-		List<Edge<String>> concurrentPath = concurrent.getShortestPath("A", "E");
-		assertEquals(oraclePath, concurrentPath);
 	}
 	
 	@Test
@@ -79,22 +54,13 @@ public class ShortestPathTestConcurrent
 		graph.connect("E", "G", 15);
 		graph.connect("F", "G", 2);
 		
-		List<Edge<String>> oraclePath = oracle.getShortestPath("B", "E");
-		List<Edge<String>> concurrentPath = concurrent.getShortestPath("B", "E");
-		int result = concurrent.getTotalWeight("B", "E");
-		assertEquals(oraclePath, concurrentPath);
-		assertEquals(14, result);
-		
-		oraclePath = oracle.getShortestPath("C", "F");
-		concurrentPath = concurrent.getShortestPath("C", "F");
-		result = concurrent.getTotalWeight("C", "F");
-		assertEquals(oraclePath, concurrentPath);
+		PathFinder<String> explorer = new PathFinder<String>(graph);
+		assertEquals(14, explorer.getTotalWeight("B", "E"));
+
+		int result = explorer.getTotalWeight("C", "F");
 		assertEquals(4, result);
 		
-		oraclePath = oracle.getShortestPath("A", "G");
-		concurrentPath = concurrent.getShortestPath("A", "G");
-		result = concurrent.getTotalWeight("A", "G");
-		assertEquals(oraclePath, concurrentPath);
+		result = explorer.getTotalWeight("A", "G");
 		assertEquals(9, result);
 	}
 	
@@ -119,9 +85,8 @@ public class ShortestPathTestConcurrent
 		graph.connect("H", "G", 2);
 		graph.connect("G", "D", 16);
 		
-		List<Edge<String>> oraclePath = oracle.getShortestPath("A", "G");
-		List<Edge<String>> concurrentPath = concurrent.getShortestPath("A", "G");
-		assertEquals(oraclePath, concurrentPath);	
+		int length = explorer.getTotalWeight("A", "G");
+		assertEquals(21, length);		
 	}
 	
 	@Test
@@ -179,37 +144,8 @@ public class ShortestPathTestConcurrent
 		graph.connect("node13", "node48", 11);
 		graph.connect("node48", "node46", 9);
 		
-		List<Edge<String>> oraclePath = oracle.getShortestPath("node11", "node7");
-		List<Edge<String>> concurrentPath = concurrent.getShortestPath("node11", "node7");
-		assertEquals(oraclePath, concurrentPath);	
-	}
-	
-	@Test
-	public void testBigGraphAndMeasurePerformance()
-	{
-		graph = gg.generateConnectedGraph(100_000, 200_000, 300);
-		concurrent = new ConcurrentPathFinder<String>(graph);
-		oracle = new PathFinder<String>(graph);
-		
-		final long concurrentTimeStart = System.nanoTime();
-		List<Edge<String>> concurrentPath = concurrent.getShortestPath("node11", "node500");
-		final long concurrentTimeFinished = System.nanoTime();
-		
-		final long oracleTimeStart = System.nanoTime();
-		List<Edge<String>> oraclePath = oracle.getShortestPath("node11", "node500");
-		final long oracleTimeFinished = System.nanoTime();
-		
-		final long concurrentTime = concurrentTimeFinished - concurrentTimeStart;
-		final long oracleTime = oracleTimeFinished - oracleTimeStart;
-		
-		System.out.println("Elapsed time oracle: " + oracleTime);
-		System.out.println("Elapsed time concurrent: " + concurrentTime);
-		System.out.println(100*(concurrentTime/(double)oracleTime) + "% compared to oracle time");
-		
-		assertEquals(oraclePath, concurrentPath);
-		assertTrue(oracleTime > concurrentTime);
-		assertTrue(oracleTime > concurrentTime*1.2);
-		assertTrue(oracleTime > concurrentTime*1.4);
+		int sum = explorer.getTotalWeight("node11", "node7");
+		assertEquals(189, sum);
 	}
 	
 	@Test
@@ -218,11 +154,21 @@ public class ShortestPathTestConcurrent
 		for(int i = 0; i < 50; i++)
 		{
 			int m = (i/4)+1;
-			concurrent = new ConcurrentPathFinder<String>(gg.generateConnectedGraph(1000*m, 2000*m, 100));
-			oracle = new ConcurrentPathFinder<String>(gg.generateConnectedGraph(1000*m, 2000*m, 100));
-			assertTrue(oracle.hasPath("node0", "node500"));
-			concurrent.getShortestPath("node0", "node500");
+			graph = gg.generateConnectedGraph(1000*m, 3000*m, 100);
+			explorer = new PathFinder<String>(graph);
+			explorer.getShortestPath("node0", "node800");
+			assertTrue(explorer.hasPath("node0", "node500"));
 		}
+	}
+	
+	
+	@Test
+	public void testHugeGraphWithNoAsserts()
+	{
+		graph = gg.generateConnectedGraph(2_000_000, 2_270_000, 100);
+		explorer = new PathFinder<String>(graph);
+		List<Edge<String>> result = explorer.getShortestPath("node0", "node400000");
+		System.out.println(result);
 	}
 
 }

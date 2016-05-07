@@ -1,4 +1,4 @@
-package graphProject.test;
+package graphProject;
 
 import static org.junit.Assert.*;
 import graphProject.Graph;
