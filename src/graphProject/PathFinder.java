@@ -22,7 +22,7 @@ public class PathFinder<T> implements GraphExplorer<T>
 	private Set<T> visitedNodes;
 	private Queue<PathRecord<T>> nodes;
 	private Map<T, T> nodePath;
-	private Map<T, Integer> nodeWeight;
+	private Map<T, Double> nodeWeight;
 	
 	public PathFinder(Graph<T> graph)
 	{
@@ -33,7 +33,7 @@ public class PathFinder<T> implements GraphExplorer<T>
 	private void setupDataStructures()
 	{
 		nodePath = new HashMap<T, T>(graph.size());
-		nodeWeight = new HashMap<T, Integer>(graph.size());
+		nodeWeight = new HashMap<T, Double>(graph.size());
 		visitedNodes = new HashSet<T>(graph.size());
 		nodes = new PriorityQueue<PathRecord<T>>();
 	}
@@ -74,10 +74,10 @@ public class PathFinder<T> implements GraphExplorer<T>
 
 	private void createWeightRecords(T start)
 	{
-		nodeWeight.put(start, 0);
+		nodeWeight.put(start, 0.0);
 		for(T node:graph.getAllNodes())
 			if(!node.equals(start))
-				nodeWeight.put(node, Integer.MAX_VALUE);
+				nodeWeight.put(node, Double.MAX_VALUE);
 	}
 
 	@Override
@@ -92,19 +92,19 @@ public class PathFinder<T> implements GraphExplorer<T>
 
 	private void updateEdges(PathRecord<T> currentRecord)
 	{
-		int currentWeight = nodeWeight.get(currentRecord.getNode());
+		double currentWeight = nodeWeight.get(currentRecord.getNode());
 		List<Edge<T>> connectingEdges = graph.getEdgesFor(currentRecord.getNode());
 		for(Edge<T> edge:connectingEdges)
 		{
-			int newWeightForNode = currentWeight + edge.getWeight();
+			double newWeightForNode = currentWeight + edge.getWeight();
 			if(updatePathRecord(currentRecord.getNode(), edge.getDestination(), newWeightForNode) && !visitedNodes.contains(edge.getDestination())) 
 				nodes.add(new PathRecord<T>(edge.getDestination(), currentRecord.getNode(), newWeightForNode));
 		}		
 	}
 
-	private boolean updatePathRecord(T node, T destination, int newWeightForNode)
+	private boolean updatePathRecord(T node, T destination, double newWeightForNode)
 	{
-		int currentWeightForNode = nodeWeight.get(destination);
+		double currentWeightForNode = nodeWeight.get(destination);
 		if(newWeightForNode < currentWeightForNode)
 		{
 			nodePath.put(destination, node);

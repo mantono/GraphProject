@@ -24,7 +24,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	private Set<T> visitedNodes; //TODO Kolla om volatile behövs eller inte. Data kan bli osynkrioniserad mellan trådar, men skadar det algoritmen?
 	private Queue<PathRecord<T>> nodes;
 	private ConcurrentMap<T, T> nodePath;
-	private ConcurrentMap<T, Integer> nodeWeight;
+	private ConcurrentMap<T, Double> nodeWeight;
 	private int threads = 1;
 	
 	public ConcurrentPathFinder(Graph<T> graph)
@@ -35,7 +35,7 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 	private void setupDataStructures()
 	{
 		nodePath = new ConcurrentHashMap<T, T>(graph.size());
-		nodeWeight = new ConcurrentHashMap<T, Integer>(graph.size());
+		nodeWeight = new ConcurrentHashMap<T, Double>(graph.size());
 		visitedNodes = new HashSet<T>(graph.size());
 		nodes = new PriorityBlockingQueue<PathRecord<T>>();
 	}
@@ -86,10 +86,10 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 
 	private void createWeightRecords(T start)
 	{
-		nodeWeight.put(start, 0);
+		nodeWeight.put(start, 0.0);
 		for(T node:graph.getAllNodes())
 			if(!node.equals(start))
-				nodeWeight.put(node, Integer.MAX_VALUE);
+				nodeWeight.put(node, Double.MAX_VALUE);
 	}
 
 	@Override
@@ -104,12 +104,12 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 
 	private void updateEdges(PathRecord<T> currentRecord)
 	{
-		int currentWeight = nodeWeight.get(currentRecord.getNode());
+		double currentWeight = nodeWeight.get(currentRecord.getNode());
 		List<Edge<T>> connectingEdges = graph.getEdgesFor(currentRecord.getNode());
 		int i = 0;
 		for(Edge<T> edge:connectingEdges)
 		{
-			int newWeightForNode = currentWeight + edge.getWeight();
+			double newWeightForNode = currentWeight + edge.getWeight();
 			if(updatePathRecord(currentRecord.getNode(), edge.getDestination(), newWeightForNode) && !visitedNodes.contains(edge.getDestination()))
 			{
 				if(threads < 4 && i++ % 2 == 1)
@@ -120,9 +120,9 @@ public class ConcurrentPathFinder<T> implements GraphExplorer<T>
 		}		
 	}
 
-	private boolean updatePathRecord(T node, T destination, int newWeightForNode)
+	private boolean updatePathRecord(T node, T destination, double newWeightForNode)
 	{
-		int currentWeightForNode = nodeWeight.get(destination);
+		double currentWeightForNode = nodeWeight.get(destination);
 		if(newWeightForNode < currentWeightForNode)
 		{
 			nodePath.put(destination, node);

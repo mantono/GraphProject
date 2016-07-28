@@ -3,9 +3,9 @@ package graphProject;
 public class Edge<T> implements Comparable<Edge<T>>
 {
 	private final T destiantion;
-	private int weight;
+	private double weight;
 
-	public Edge(final T node, int weight)
+	public Edge(final T node, double weight)
 	{
 		if(weight < 1)
 			throw new IllegalArgumentException("Weight must not be negative or zero");
@@ -23,12 +23,12 @@ public class Edge<T> implements Comparable<Edge<T>>
 		return destiantion;
 	}
 
-	public int getWeight()
+	public double getWeight()
 	{
 		return weight;
 	}
 
-	public void setWeight(int weight)
+	public void setWeight(double weight)
 	{
 		this.weight = weight;
 	}
@@ -50,9 +50,9 @@ public class Edge<T> implements Comparable<Edge<T>>
 	public int hashCode()
 	{
 		final int prime = 17;
-		int code = prime*weight;
+		double code = prime*weight;
 		code = code*prime + destiantion.hashCode();
-		return code;
+		return new Double(code).intValue();
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class Edge<T> implements Comparable<Edge<T>>
 	@Override
 	public int compareTo(Edge<T> other)
 	{
-		return this.weight - other.weight;
+		return new Double(this.weight - other.weight).intValue();
 	}
 
 }

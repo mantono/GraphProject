@@ -12,9 +12,9 @@ public interface Graph<T> extends Collection<T>
 	boolean contains(Object data);
 	int edgeSize(T data);
 	boolean isConnected(T start, T end);
-	boolean connect(T start, T end, int weight);
+	boolean connect(T start, T end, double weight);
 	boolean disconnect(T start, T end);
-	int getWeight(T start, T end);
+	double getWeight(T start, T end);
 	Set<T> getAllNodes();
 	List<Edge<T>> getEdgesFor(T node);
 	Edge<T> getEdgeBetween(T node1, T node2);

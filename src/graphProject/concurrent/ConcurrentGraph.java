@@ -63,7 +63,7 @@ public class ConcurrentGraph<T> extends HashSet<T> implements Graph<T>, Serializ
 	}
 
 	@Override
-	public int getWeight(T start, T end)
+	public double getWeight(T start, T end)
 	{
 		if(!isConnected(start, end))
 			return -1;
@@ -81,7 +81,7 @@ public class ConcurrentGraph<T> extends HashSet<T> implements Graph<T>, Serializ
 	}
 
 	@Override
-	public boolean connect(T start, T end, int weight)
+	public boolean connect(T start, T end, double weight)
 	{
 		if(!nodesExist(start, end))
 			throw new NoSuchElementException();
@@ -97,7 +97,7 @@ public class ConcurrentGraph<T> extends HashSet<T> implements Graph<T>, Serializ
 		return contains(node1) && contains(node2);
 	}
 	
-	private void changeWeight(T source, T destination, int weight)
+	private void changeWeight(T source, T destination, double weight)
 	{
 		Edge<T> edgeFromSource = getEdgeBetween(source, destination);
 		edgeFromSource.setWeight(weight);
@@ -105,7 +105,7 @@ public class ConcurrentGraph<T> extends HashSet<T> implements Graph<T>, Serializ
 		edgeFromDestination.setWeight(weight);
 	}
 
-	private void createEdge(T source, T destination, int weight)
+	private void createEdge(T source, T destination, double weight)
 	{
 		edges.putIfAbsent(source, new ArrayList<Edge<T>>(3));
 		List<Edge<T>> edgeList = edges.get(source);
