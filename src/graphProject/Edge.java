@@ -10,8 +10,8 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable
 
 	public Edge(final T node, double weight)
 	{
-		if(weight < 1)
-			throw new IllegalArgumentException("Weight must not be negative or zero");
+		if(weight < 0)
+			throw new IllegalArgumentException("Weight must not be negative");
 		this.destiantion = node;
 		this.weight = weight;
 	}
