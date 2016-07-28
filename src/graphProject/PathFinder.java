@@ -187,7 +187,7 @@ public class PathFinder<T> implements GraphExplorer<T>
 	{
 		setupDataStructures();
 		Graph<T> mst = new ConcurrentGraph<T>();
-		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>(graph.getAllEdges());
+		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>();
 		final int nodesInCompleteGraph = graph.size();
 		
 		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph)
