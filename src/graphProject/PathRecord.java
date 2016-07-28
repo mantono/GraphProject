@@ -3,16 +3,16 @@ package graphProject;
 public class PathRecord<T> implements Comparable<PathRecord<T>>
 {
 	private final T node;
-	private final int weight;
+	private final double weight;
 	private final T reachedThrough;
 	
-	public PathRecord(T node, T reachedThrough, int weight)
+	public PathRecord(T node, T reachedThrough, double newWeightForNode)
 	{
 		this.node = node;
 		this.reachedThrough = reachedThrough;
-		if(weight < 0)
+		if(newWeightForNode < 0)
 			throw new IllegalArgumentException("Weight must not be negative!");
-		this.weight = weight;
+		this.weight = newWeightForNode;
 	}
 	
 	public PathRecord(T node)
@@ -26,7 +26,7 @@ public class PathRecord<T> implements Comparable<PathRecord<T>>
 		return node;
 	}
 	
-	int getWeight()
+	double getWeight()
 	{
 		return weight;
 	}
@@ -39,7 +39,7 @@ public class PathRecord<T> implements Comparable<PathRecord<T>>
 	@Override
 	public int compareTo(PathRecord<T> other)
 	{
-		return this.weight - other.weight;
+		return new Double(this.weight - other.weight).intValue();
 	}
 	
 	@Override

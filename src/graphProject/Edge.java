@@ -1,41 +1,37 @@
 package graphProject;
 
-public class Edge<T> implements Comparable<Edge<T>>
-{
-	private final T node1;
-	private final T node2;
-	private int weight;
+import java.io.Serializable;
 
-	public Edge(final T node1, final T node2, int weight)
+public class Edge<T> implements Comparable<Edge<T>>, Serializable
+{
+	private final static long serialVersionUID = 0L;
+	private final T destiantion;
+	private double weight;
+
+	public Edge(final T node, double weight)
 	{
-		if(weight < 1)
-			throw new IllegalArgumentException("Weight must not be negative or zero");
-		this.node1 = node1;
-		this.node2 = node2;
+		if(weight < 0)
+			throw new IllegalArgumentException("Weight must not be negative");
+		this.destiantion = node;
 		this.weight = weight;
 	}
 
 	public T getSource()
 	{
-		return node1;
+		return destiantion;
 	}
 
 	public T getDestination()
 	{
-		return node2;
+		return destiantion;
 	}
 
-	public T getDestination(final T source)
-	{
-		return (node1.equals(source)) ? node2 : node1;
-	}
-
-	public int getWeight()
+	public double getWeight()
 	{
 		return weight;
 	}
 
-	public void setWeight(int weight)
+	public void setWeight(double weight)
 	{
 		this.weight = weight;
 	}
@@ -49,33 +45,29 @@ public class Edge<T> implements Comparable<Edge<T>>
 			return false;
 		Edge<T> other = (Edge<T>) object;
 		final boolean sameWeight = this.weight == other.weight;
-		final boolean sameNode1Node1 = this.node1.equals(other.node1);
-		final boolean sameNode2Node2 = this.node2.equals(other.node2);
-		final boolean sameNode1Node2 = this.node1.equals(other.node2);
-		final boolean sameNode2Node1 = this.node2.equals(other.node1);
-		return (sameNode1Node1 && sameNode2Node2 || sameNode1Node2 && sameNode2Node1) && sameWeight;
+		final boolean sameDestination = this.destiantion.equals(other.destiantion);
+		return sameDestination && sameWeight;
 	}
 
 	@Override
 	public int hashCode()
 	{
 		final int prime = 17;
-		int code = prime*weight;
-		code = code*prime + node1.hashCode();
-		code = code*prime + node2.hashCode();
-		return code;
+		double code = prime*weight;
+		code = code*prime + destiantion.hashCode();
+		return new Double(code).intValue();
 	}
 
 	@Override
 	public String toString()
 	{
-		return node1.toString() + "<--" + weight + "-->" + node2.toString();
+		return weight + "-->" + destiantion.toString();
 	}
 
 	@Override
 	public int compareTo(Edge<T> other)
 	{
-		return this.weight - other.weight;
+		return new Double(this.weight - other.weight).intValue();
 	}
 
 }

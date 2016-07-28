@@ -4,6 +4,7 @@ import graphProject.Edge;
 import graphProject.Graph;
 
 import java.io.Serializable;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -11,41 +12,47 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
-public class ConcurrentGraph<T> implements Graph<T>, Serializable
+public class ConcurrentGraph<T> extends HashSet<T> implements Graph<T>, Serializable
 {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 2473878382917498580L;
-	//private final Map<T, List<Edge<T>>> nodeConnections = new HashMap<T, List<Edge<T>>>();
-	private final Set<T> nodes = new HashSet<T>();
-	private final Set<Edge<T>> edges = new HashSet<Edge<T>>();
+	private final ConcurrentHashMap<T, List<Edge<T>>> edges;
 	
 	public ConcurrentGraph(Collection<T> nodes)
 	{
-		this.nodes.addAll(nodes);
+		addAll(nodes);
+		edges = new ConcurrentHashMap<T, List<Edge<T>>>(nodes.size(), 0.8f, 3);
 	}
 
 	public ConcurrentGraph()
 	{
+		edges = new ConcurrentHashMap<T, List<Edge<T>>>(100, 0.8f, 3);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public boolean add(T data)
+	public boolean remove(Object data)
 	{
-		return nodes.add(data);
-	}
-
-	@Override
-	public boolean remove(T data)
-	{
-		if(!nodes.contains(data))
+		if(!contains(data))
 			return false;
-		removeConnectionsTo(data);
-		return nodes.remove(data);
+		removeConnectionsTo((T) data);
+		synchronized(this)
+		{
+			return super.remove(data);
+		}
+	}
+	
+	@Override
+	public synchronized boolean add(T data)
+	{
+		return super.add(data);
 	}
 	
 	private void removeConnectionsTo(T data)
@@ -56,13 +63,7 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	}
 
 	@Override
-	public boolean contains(T data)
-	{
-		return nodes.contains(data);
-	}
-
-	@Override
-	public int getWeight(T start, T end)
+	public double getWeight(T start, T end)
 	{
 		if(!isConnected(start, end))
 			return -1;
@@ -72,31 +73,18 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	@Override
 	public Edge<T> getEdgeBetween(T node1, T node2)
 	{
-		for(Edge<T> edge:edges)
-		{
-			if(edge.getSource().equals(node1) && edge.getDestination().equals(node2))
+		List<Edge<T>> edgeList = edges.get(node1);
+		for(Edge<T> edge : edgeList)
+			if(edge.getDestination().equals(node2))
 				return edge;
-		}
 		return null;
 	}
 
 	@Override
-	public int size()
-	{
-		return nodes.size();
-	}
-	
-	@Override
-	public void clear()
-	{
-		nodes.clear();
-	}	
-
-	@Override
-	public boolean connect(T start, T end, int weight)
+	public boolean connect(T start, T end, double weight)
 	{
 		if(!nodesExist(start, end))
-			return false;
+			throw new NoSuchElementException();
 		if(isConnected(start, end))
 			changeWeight(start, end, weight);
 		else
@@ -106,12 +94,10 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	
 	private boolean nodesExist(T node1, T node2)
 	{
-		if(nodes.contains(node1) && nodes.contains(node2))
-			return true;
-		return false;
+		return contains(node1) && contains(node2);
 	}
 	
-	private void changeWeight(T source, T destination, int weight)
+	private void changeWeight(T source, T destination, double weight)
 	{
 		Edge<T> edgeFromSource = getEdgeBetween(source, destination);
 		edgeFromSource.setWeight(weight);
@@ -119,11 +105,17 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 		edgeFromDestination.setWeight(weight);
 	}
 
-	private void createEdge(T source, T destination, int weight)
+	private void createEdge(T source, T destination, double weight)
 	{
-		Edge<T> edge = new Edge<T>(source, destination, weight);
-		if(!edges.contains(edge))
-			edges.add(edge);
+		edges.putIfAbsent(source, new ArrayList<Edge<T>>(3));
+		List<Edge<T>> edgeList = edges.get(source);
+		Edge<T> edge = new Edge<T>(destination, weight);
+		edgeList.add(edge);
+		
+		edges.putIfAbsent(destination, new ArrayList<Edge<T>>(3));
+		edgeList = edges.get(destination);
+		edge = new Edge<T>(source, weight);
+		edgeList.add(edge);
 	}
 
 	@Override
@@ -153,30 +145,30 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	public boolean isConnected(T start, T end)
 	{
 		if(!nodesExist(start, end))
-			return false;
+			throw new NoSuchElementException();
 		List<Edge<T>> edges = getEdgesFor(start);
 		for(Edge<T> edge:edges)
-		{
 			if(edge.getDestination().equals(end))
 				return true;
-		}
 		return false;
 	}
 	
 	@Override
 	public int getNumberOfEdges()
 	{
-		return edges.size();
+		int size = 0;
+		for(List<Edge<T>> edgeList : edges.values())
+			size += edgeList.size();
+		return size/2;
 	}
 	
 	@Override
 	public List<Edge<T>> getEdgesFor(T node)
 	{
-		List<Edge<T>> edgesForNode = new ArrayList<Edge<T>>();
-		for(Edge<T> edge : edges)
-			if(edge.getSource().equals(node))
-				edgesForNode.add(edge);
-		return edgesForNode;
+		final List<Edge<T>> edgeList = edges.get(node);
+		if(edgeList == null)
+			return new ArrayList<Edge<T>>(1);
+		return edgeList;
 	}
 
 	@Override
@@ -188,7 +180,7 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	@Override
 	public Set<T> getAllNodes()
 	{
-		return nodes;
+		return (Set<T>) this;
 	}
 	
 	@Override
@@ -196,7 +188,7 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	{
 		int lowestAmountOfEdges = Integer.MAX_VALUE;
 		T nodeWitLowestAmountOfEdges = null;
-		for(T node : nodes)
+		for(T node : this)
 		{
 			final int numberOfEdges = getEdgesFor(node).size();
 			if(numberOfEdges < lowestAmountOfEdges)
@@ -207,7 +199,7 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	}
 
 	@Override
-	public Set<Edge<T>> getAllEdges()
+	public Map<T, List<Edge<T>>> getAllEdges()
 	{
 		return edges;
 	}
