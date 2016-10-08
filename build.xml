@@ -58,12 +58,12 @@
 </target>
 
 <target name="javadoc" description="Compiles JavaDocs for this project" depends="init">
-	<javadoc packagenames="duplicatesearcher.*,research.*" access="package" additionalparam="-link http://docs.oracle.com/javase/8/docs/api/ " author="false" sourcepath="src" destdir="${doc}" source="1.8">
+	<javadoc packagenames="graphProject.*" access="package" additionalparam="-link http://docs.oracle.com/javase/8/docs/api/ " author="false" sourcepath="src" destdir="${doc}" source="1.8">
 	</javadoc>
 </target>
 
-<target name="package" description="Package files to JAR" depends="test,javadoc">
-	<jar jarfile="${dist}/${ant.project.name}-${DSTAMP}.jar" basedir="${dist}" />
+<target name="package" description="Package files to JAR" depends="compile,javadoc">
+	<jar jarfile="${dist}/${ant.project.name}-${DSTAMP}.jar" basedir="${build}" />
 </target>
 
 <target name="deploy" description="Deploy code to server">
