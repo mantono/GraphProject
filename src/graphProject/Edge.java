@@ -16,11 +16,6 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable
 		this.weight = weight;
 	}
 
-	public T getSource()
-	{
-		return destiantion;
-	}
-
 	public T getDestination()
 	{
 		return destiantion;
