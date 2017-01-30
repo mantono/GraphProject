@@ -5,15 +5,21 @@ import java.io.Serializable;
 public class Edge<T> implements Comparable<Edge<T>>, Serializable
 {
 	private final static long serialVersionUID = 0L;
-	private final T destiantion;
+	private final T source, destiantion;
 	private double weight;
 
-	public Edge(final T node, double weight)
+	public Edge(final T source, final T destination, double weight)
 	{
 		if(weight < 0)
 			throw new IllegalArgumentException("Weight must not be negative");
-		this.destiantion = node;
+		this.source = source;
+		this.destiantion = destination;
 		this.weight = weight;
+	}
+	
+	public T getSource()
+	{
+		return source;
 	}
 
 	public T getDestination()
@@ -26,9 +32,16 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable
 		return weight;
 	}
 
-	public void setWeight(double weight)
+	/**
+	 * Changes the weight of this edge.
+	 * @param newWeight the new weight for the Edge.
+	 * @return true if the weight was changed, else false.
+	 */
+	public boolean setWeight(double newWeight)
 	{
-		this.weight = weight;
+		final double previousWeight = this.weight;
+		this.weight = newWeight;
+		return previousWeight != newWeight;
 	}
 
 	@Override
@@ -40,8 +53,9 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable
 			return false;
 		Edge<T> other = (Edge<T>) object;
 		final boolean sameWeight = this.weight == other.weight;
+		final boolean sameSource = this.source.equals(other.source);
 		final boolean sameDestination = this.destiantion.equals(other.destiantion);
-		return sameDestination && sameWeight;
+		return sameSource && sameDestination && sameWeight;
 	}
 
 	@Override
@@ -49,6 +63,7 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable
 	{
 		final int prime = 17;
 		double code = prime*weight;
+		code = code*prime + source.hashCode();
 		code = code*prime + destiantion.hashCode();
 		return new Double(code).intValue();
 	}
@@ -56,7 +71,7 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable
 	@Override
 	public String toString()
 	{
-		return weight + "-->" + destiantion.toString();
+		return source + "--" + weight + "-->" + destiantion.toString();
 	}
 
 	@Override

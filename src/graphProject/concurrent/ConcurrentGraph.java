@@ -110,12 +110,12 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 	{
 		edges.putIfAbsent(source, new ArrayList<Edge<T>>(3));
 		List<Edge<T>> edgeList = edges.get(source);
-		Edge<T> edge = new Edge<T>(destination, weight);
+		Edge<T> edge = new Edge<T>(source, destination, weight);
 		edgeList.add(edge);
 		
 		edges.putIfAbsent(destination, new ArrayList<Edge<T>>(3));
 		edgeList = edges.get(destination);
-		edge = new Edge<T>(source, weight);
+		edge = new Edge<T>(destination, source, weight);
 		edgeList.add(edge);
 	}
 
@@ -204,4 +204,10 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 	{
 		return edges;
 	}
+
+	@Override
+	public boolean isDirected()
+	{
+		return false;
+ 	}
 }
