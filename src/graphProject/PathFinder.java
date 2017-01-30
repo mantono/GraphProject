@@ -1,20 +1,21 @@
 package graphProject;
 
-import graphProject.concurrent.ConcurrentGraph;
-
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 
-import javax.swing.text.html.MinimalHTMLWriter;
+import graphProject.concurrent.ConcurrentGraph;
 
 public class PathFinder<T> implements GraphExplorer<T>
 {
@@ -186,33 +187,37 @@ public class PathFinder<T> implements GraphExplorer<T>
 	public Graph<T> getMinimumSpanningTree()
 	{
 		setupDataStructures();
-		Graph<T> mst = new ConcurrentGraph<T>();
-		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>();
+		Graph<T> mst = new ConcurrentGraph<T>(graph.getAllNodes());
+		PathFinder<T> mstPath = new PathFinder<T>(mst);
+		final Set<Edge<T>> allEdges = getAllEdges(); 
+		Queue<Edge<T>> edges = new PriorityQueue<Edge<T>>(allEdges);
 		final int nodesInCompleteGraph = graph.size();
 		
-		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph)
+		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph && !edges.isEmpty())
 		{
 			Edge<T> edge = edges.poll();
-			final T source = edge.getSource();
+			final T source = edge.getDestination();
 			final T destination = edge.getDestination();
-			if(!mst.isConnected(source, destination))
-			{
-				mst.add(source);
-				mst.add(destination);
-				mst.connect(edge.getSource(), edge.getDestination(), edge.getWeight());
-			}
-//			mst.add(currentNode);
-//			Edge<T> edge = null;
-//			do
-//			{
-//				if(!edges.isEmpty())
-//					edge = edges.poll();
-//			}while(mst.contains(edge.getDestination()));
-//			mst.connect(currentNode, edge.getDestination(), edge.getWeight());
-//			currentNode = edge.getDestination();
+			if(!mstPath.hasPath(source, destination))
+				mst.connect(source, destination, edge.getWeight());
 		}
-		
+
+		assert mst.isConnected() : "Minimum spanning tree is not connected!";
 		return mst;
+	}
+
+	private Set<Edge<T>> getAllEdges()
+	{
+		final Map<T, List<Edge<T>>> edges = graph.getAllEdges();
+		final Set<Edge<T>> allEdges = new HashSet<Edge<T>>(edges.size()*2);
+		Iterator<Entry<T, List<Edge<T>>>> iter = edges.entrySet().iterator();
+		while(iter.hasNext())
+		{
+			List<Edge<T>> nodeEdges = iter.next().getValue();
+			allEdges.addAll(nodeEdges);
+		}
+
+		return allEdges;		
 	}
 
 
@@ -249,7 +254,41 @@ public class PathFinder<T> implements GraphExplorer<T>
 	@Override
 	public List<T> breadthFirstSearch(T start, T end)
 	{
-		// TODO Auto-generated method stub
+		final Queue<T> nodesToCheck = new ArrayDeque<T>(16);
+		final Map<T, T> path = new HashMap<T, T>(32);
+
+		nodesToCheck.add(start);
+		path.put(start, null);
+		while(!nodesToCheck.isEmpty())
+		{
+			T currentNode = nodesToCheck.poll();
+			List<Edge<T>> possibleNodes = graph.getEdgesFor(currentNode);
+			for(Edge<T> edge : possibleNodes)
+			{
+				final T node = edge.getDestination();
+				if(!path.containsKey(node))
+				{
+					nodesToCheck.add(node);
+					path.put(node, currentNode);
+				}
+			}
+			if(currentNode.equals(end))
+				return buildPath(path, start, end);
+		}
 		return null;
+	}
+
+	private List<T> buildPath(Map<T, T> visitedNodes, T start, T end)
+	{
+		final LinkedList<T> path = new LinkedList<T>();
+		T node = end;
+		while(node != start)
+		{
+			path.push(node);
+			final T comingFrom = visitedNodes.get(node);
+			node = comingFrom;
+		}
+
+		return path;
 	}
 }
