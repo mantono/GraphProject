@@ -182,8 +182,10 @@ public class PathFinder<T> implements GraphExplorer<T>
 		return next;
 	}
 
-
 	@Override
+	/**
+	 * Using Kruskal's algorithm.
+	 */
 	public Graph<T> getMinimumSpanningTree()
 	{
 		setupDataStructures();
@@ -202,7 +204,32 @@ public class PathFinder<T> implements GraphExplorer<T>
 				mst.connect(source, destination, edge.getWeight());
 		}
 
-		assert mst.isConnected() : "Minimum spanning tree is not connected!";
+		assert mstPath.isConnected() : "Minimum spanning tree is not connected!";
+		return mst;
+	}
+
+	public Graph<T> getMinimumSpanningTreePrims()
+	{
+		Graph<T> mst = new ConcurrentGraph<T>(graph.getAllNodes());
+		PathFinder<T> mstPath = new PathFinder<T>(mst);
+		List<Edge<T>> edgesToAdd = graph.getEdgesFor(mst.getRandomElement());
+		PriorityQueue<Edge<T>> edgeQueue = new PriorityQueue<Edge<T>>(edgesToAdd);
+		final int nodesInCompleteGraph = graph.size();
+
+		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph)
+		{
+			Edge<T> edge = edgeQueue.poll();
+			final T source = edge.getDestination();
+			final T destination = edge.getDestination();
+			if(!mst.isConnected(source) || !mst.isConnected(destination))
+			{
+				mst.connect(source, destination, edge.getWeight());
+				edgesToAdd = graph.getEdgesFor(destination);
+				edgeQueue.addAll(edgesToAdd);
+			}
+		}
+
+		assert mstPath.isConnected() : "Minimum spanning tree is not connected!";
 		return mst;
 	}
 
@@ -290,5 +317,16 @@ public class PathFinder<T> implements GraphExplorer<T>
 		}
 
 		return path;
+	}
+
+	@Override
+	public boolean isConnected()
+	{
+		Map<T, List<Edge<T>>> edges = graph.getAllEdges();
+		for(T node : graph)
+			if(!edges.containsKey(node) || edges.get(node).isEmpty())
+				return false;
+
+		return true;
 	}
 }
