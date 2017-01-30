@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public interface Graph<T> extends Collection<T>
+import com.mantono.RandomAccess;
+
+public interface Graph<T> extends Collection<T>, RandomAccess<T>
 {
 	boolean add(T data);
 	boolean remove(Object data);

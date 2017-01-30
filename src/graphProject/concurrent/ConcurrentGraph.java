@@ -1,8 +1,5 @@
 package graphProject.concurrent;
 
-import graphProject.Edge;
-import graphProject.Graph;
-
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -16,8 +13,12 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.mantono.RandomHashSet;
 
-public class ConcurrentGraph<T> extends HashSet<T> implements Graph<T>, Serializable
+import graphProject.Edge;
+import graphProject.Graph;
+
+public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Serializable
 {
 	/**
 	 * 
