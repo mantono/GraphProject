@@ -23,16 +23,16 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 	 */
 	private static final long serialVersionUID = 2473878382917498580L;
 	private final ConcurrentHashMap<T, List<Edge<T>>> edges;
-	
+
 	public ConcurrentGraph(Collection<T> nodes)
 	{
 		addAll(nodes);
-		edges = new ConcurrentHashMap<T, List<Edge<T>>>(nodes.size(), 0.8f, 3);
+		this.edges = new ConcurrentHashMap<T, List<Edge<T>>>(nodes.size(), 0.8f, 3);
 	}
 
 	public ConcurrentGraph()
 	{
-		edges = new ConcurrentHashMap<T, List<Edge<T>>>(100, 0.8f, 3);
+		this.edges = new ConcurrentHashMap<T, List<Edge<T>>>(100, 0.8f, 3);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -48,7 +48,7 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 	private void removeConnectionsTo(T data)
 	{
 		final List<Edge<T>> edges = new ArrayList<Edge<T>>(getEdgesFor(data));
-		for(Edge<T> edge:edges)
+		for(Edge<T> edge : edges)
 			disconnect(data, edge.getDestination());
 	}
 
@@ -59,7 +59,7 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 			return -1;
 		return getEdgeBetween(start, end).getWeight();
 	}
-	
+
 	@Override
 	public Edge<T> getEdgeBetween(T node1, T node2)
 	{
@@ -104,7 +104,7 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 		List<Edge<T>> edgeList = edges.get(source);
 		Edge<T> edge = new Edge<T>(source, destination, weight);
 		edgeList.add(edge);
-		
+
 		edges.putIfAbsent(destination, new ArrayList<Edge<T>>(3));
 		edgeList = edges.get(destination);
 		edge = new Edge<T>(destination, source, weight);
@@ -120,7 +120,7 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 		removeEdge(end, start);
 		return true;
 	}
-	
+
 	private void removeEdge(T source, T destination)
 	{
 		Iterator<Edge<T>> edgeIterator = getEdgesFor(source).iterator();
@@ -140,21 +140,21 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 		if(!nodesExist(start, end))
 			throw new NoSuchElementException();
 		List<Edge<T>> edges = getEdgesFor(start);
-		for(Edge<T> edge:edges)
+		for(Edge<T> edge : edges)
 			if(edge.getDestination().equals(end))
 				return true;
 		return false;
 	}
-	
+
 	@Override
 	public int getNumberOfEdges()
 	{
 		int size = 0;
 		for(List<Edge<T>> edgeList : edges.values())
 			size += edgeList.size();
-		return size/2;
+		return size / 2;
 	}
-	
+
 	@Override
 	public List<Edge<T>> getEdgesFor(T node)
 	{
@@ -175,7 +175,7 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 	{
 		return (Set<T>) this;
 	}
-	
+
 	@Override
 	public T getNodeWithLeastEdges()
 	{
