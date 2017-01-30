@@ -135,6 +135,12 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 	}
 
 	@Override
+	public boolean isConnected(T node)
+	{
+		return contains(node) && edges.get(node) != null && !edges.get(node).isEmpty();
+	}
+
+	@Override
 	public boolean isConnected(T start, T end)
 	{
 		if(!nodesExist(start, end))
