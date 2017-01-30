@@ -1,13 +1,11 @@
 package graphProject.concurrent;
 
 import java.io.Serializable;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -78,23 +76,26 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 		if(!nodesExist(start, end))
 			throw new NoSuchElementException();
 		if(isConnected(start, end))
-			changeWeight(start, end, weight);
+			return false;
 		else
 			createEdge(start, end, weight);
 		return true;
 	}
-	
+
 	private boolean nodesExist(T node1, T node2)
 	{
 		return contains(node1) && contains(node2);
 	}
-	
-	private void changeWeight(T source, T destination, double weight)
+
+	public boolean changeWeight(T source, T destination, double weight)
 	{
+		if(!isConnected(source, destination))
+			throw new IllegalArgumentException(source + " and " + destination + " are not connected");
 		Edge<T> edgeFromSource = getEdgeBetween(source, destination);
 		edgeFromSource.setWeight(weight);
+
 		Edge<T> edgeFromDestination = getEdgeBetween(destination, source);
-		edgeFromDestination.setWeight(weight);
+		return edgeFromDestination.setWeight(weight);
 	}
 
 	private void createEdge(T source, T destination, double weight)
@@ -186,19 +187,19 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 			if(numberOfEdges < lowestAmountOfEdges)
 				nodeWitLowestAmountOfEdges = node;
 		}
-		
+
 		return nodeWitLowestAmountOfEdges;
 	}
 
 	@Override
 	public Map<T, List<Edge<T>>> getAllEdges()
 	{
-		return edges;
+		return new HashMap<T, List<Edge<T>>>(edges);
 	}
 
 	@Override
 	public boolean isDirected()
 	{
 		return false;
- 	}
+	}
 }
