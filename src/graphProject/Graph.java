@@ -14,6 +14,7 @@ public interface Graph<T> extends Collection<T>, RandomAccess<T>
 	boolean contains(Object data);
 	int edgeSize(T data);
 	boolean isDirected();
+	boolean isConnected(T node);
 	boolean isConnected(T start, T end);
 	boolean connect(T start, T end, double weight);
 	boolean disconnect(T start, T end);
