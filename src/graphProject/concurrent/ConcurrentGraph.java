@@ -44,18 +44,9 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 		if(!contains(data))
 			return false;
 		removeConnectionsTo((T) data);
-		synchronized(this)
-		{
-			return super.remove(data);
-		}
+		return super.remove(data);
 	}
-	
-	@Override
-	public synchronized boolean add(T data)
-	{
-		return super.add(data);
-	}
-	
+
 	private void removeConnectionsTo(T data)
 	{
 		final List<Edge<T>> edges = new ArrayList<Edge<T>>(getEdgesFor(data));
