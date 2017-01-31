@@ -198,25 +198,23 @@ public class PathFinder<T> implements GraphExplorer<T>
 		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph && !edges.isEmpty())
 		{
 			Edge<T> edge = edges.poll();
-			final T source = edge.getDestination();
+			final T source = edge.getSource();
 			final T destination = edge.getDestination();
 			if(!mstPath.hasPath(source, destination))
 				mst.connect(source, destination, edge.getWeight());
 		}
 
-		assert mstPath.isConnected() : "Minimum spanning tree is not connected!";
 		return mst;
 	}
 
 	public Graph<T> getMinimumSpanningTreePrims()
 	{
 		Graph<T> mst = new ConcurrentGraph<T>(graph.getAllNodes());
-		PathFinder<T> mstPath = new PathFinder<T>(mst);
 		List<Edge<T>> edgesToAdd = graph.getEdgesFor(mst.getRandomElement());
 		PriorityQueue<Edge<T>> edgeQueue = new PriorityQueue<Edge<T>>(edgesToAdd);
 		final int nodesInCompleteGraph = graph.size();
 
-		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph)
+		while(mst.getNumberOfEdges() + 1 < nodesInCompleteGraph && !edgeQueue.isEmpty())
 		{
 			Edge<T> edge = edgeQueue.poll();
 			final T source = edge.getDestination();
@@ -229,7 +227,6 @@ public class PathFinder<T> implements GraphExplorer<T>
 			}
 		}
 
-		assert mstPath.isConnected() : "Minimum spanning tree is not connected!";
 		return mst;
 	}
 
@@ -326,7 +323,10 @@ public class PathFinder<T> implements GraphExplorer<T>
 		for(T node : graph)
 			if(!edges.containsKey(node) || edges.get(node).isEmpty())
 				return false;
-
-		return true;
+		
+		Graph<T> mst = getMinimumSpanningTreePrims();
+		final int mstNodes = mst.getNumberOfEdges() + 1;
+		
+		return mstNodes == graph.size();
 	}
 }
