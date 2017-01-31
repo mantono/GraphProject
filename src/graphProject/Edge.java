@@ -77,7 +77,7 @@ public class Edge<T> implements Comparable<Edge<T>>, Serializable
 	@Override
 	public int compareTo(Edge<T> other)
 	{
-		return new Double(this.weight - other.weight).intValue();
+		return Double.compare(this.weight, other.weight);
 	}
 
 }
