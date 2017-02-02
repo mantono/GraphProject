@@ -6,7 +6,6 @@ import graphProject.Graph;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class ConcurrentDigraph<T> extends RandomHashSet<T> implements Graph<T>, 
 	public double getWeight(T start, T end)
 	{
 		if(!isConnected(start, end))
-			return -1;
+			return Double.NaN;
 		return getEdgeBetween(start, end).getWeight();
 	}
 
@@ -99,15 +98,7 @@ public class ConcurrentDigraph<T> extends RandomHashSet<T> implements Graph<T>, 
 	{
 		edges.putIfAbsent(source, new ArrayList<Edge<T>>(3));
 		List<Edge<T>> edgeList = edges.get(source);
-		Edge<T> edge = new Edge<T>(destination, weight);
-		edgeList.add(edge);
-
-		if(isDirected())
-			return;
-			
-		edges.putIfAbsent(destination, new ArrayList<Edge<T>>(3));
-		edgeList = edges.get(destination);
-		edge = new Edge<T>(source, weight);
+		Edge<T> edge = new Edge<T>(source, destination, weight);
 		edgeList.add(edge);
 	}
 
@@ -117,9 +108,6 @@ public class ConcurrentDigraph<T> extends RandomHashSet<T> implements Graph<T>, 
 		if(!isConnected(start, end))
 			return false;
 		removeEdge(start, end);
-		if(isDirected())
-			return true;
-		removeEdge(end, start);
 		return true;
 	}
 
@@ -154,7 +142,7 @@ public class ConcurrentDigraph<T> extends RandomHashSet<T> implements Graph<T>, 
 		int size = 0;
 		for(List<Edge<T>> edgeList : edges.values())
 			size += edgeList.size();
-		return size / 2;
+		return size;
 	}
 
 	@Override
@@ -203,5 +191,12 @@ public class ConcurrentDigraph<T> extends RandomHashSet<T> implements Graph<T>, 
 	public boolean isDirected()
 	{
 		return true;
+	}
+
+	@Override
+	public boolean isConnected(T node)
+	{
+		final List<Edge<T>> edgeList = edges.get(node);
+		return edgeList != null && !edgeList.isEmpty();
 	}
 }
