@@ -37,6 +37,16 @@ public class ConcurrentGraphTest
 		assertTrue(graph.add("test2"));
 		assertTrue(graph.add("test3"));
 	}
+
+	@Test
+	public void testAddEdgeTwice()
+	{
+		assertTrue(graph.connect("node0", "node1", 1));
+		assertFalse(graph.connect("node0", "node1", 1));
+		assertFalse(graph.connect("node0", "node1", 2));
+		assertTrue(graph.disconnect("node0", "node1"));
+		assertFalse(graph.isConnected("node0", "node1"));
+	}
 	
 	@Test
 	public void testContains()
@@ -68,8 +78,8 @@ public class ConcurrentGraphTest
 	public void testConnect()
 	{
 		graph.connect("node0", "node1", 14);
-		assertEquals(14, graph.getWeight("node0", "node1"));
-		assertEquals(14, graph.getWeight("node1", "node0"));
+		assertEquals(14, graph.getWeight("node0", "node1"), 0);
+		assertEquals(14, graph.getWeight("node1", "node0"), 0);
 	}
 	
 	@Test(expected=NoSuchElementException.class)
@@ -121,9 +131,9 @@ public class ConcurrentGraphTest
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
-	public void testIllegalConnectWithZeroWeight()
+	public void testIllegalConnectWithNegativeWeight()
 	{
-		graph.connect("node0", "node1", 0);
+		graph.connect("node0", "node1", -1);
 	}
 	
 
