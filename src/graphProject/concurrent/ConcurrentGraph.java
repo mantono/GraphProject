@@ -53,44 +53,38 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 	}
 
 	@Override
-	public double getWeight(T start, T end)
+	public double getWeight(T source, T destination)
 	{
-		if(!isConnected(start, end))
-			return -1;
-		return getEdgeBetween(start, end).getWeight();
+		return getEdgeBetween(source, destination).getWeight();
 	}
 
 	@Override
-	public Edge<T> getEdgeBetween(T node1, T node2)
+	public Edge<T> getEdgeBetween(T source, T destination)
 	{
-		List<Edge<T>> edgeList = edges.get(node1);
+		List<Edge<T>> edgeList = edges.get(source);
 		for(Edge<T> edge : edgeList)
-			if(edge.getDestination().equals(node2))
+			if(edge.getDestination().equals(destination))
 				return edge;
-		return null;
+		throw new IllegalArgumentException("There is no edge between nodes " + source + " and " + destination);
 	}
 
 	@Override
-	public boolean connect(T start, T end, double weight)
+	public boolean connect(T source, T destination, double weight)
 	{
-		if(!nodesExist(start, end))
+		if(!nodesExist(source, destination))
 			throw new NoSuchElementException();
-		if(isConnected(start, end))
+		if(isConnected(source, destination))
 			return false;
-		else
-			createEdge(start, end, weight);
-		return true;
+		return createEdge(source, destination, weight);
 	}
 
-	private boolean nodesExist(T node1, T node2)
+	private boolean nodesExist(T source, T destination)
 	{
-		return contains(node1) && contains(node2);
+		return contains(source) && contains(destination);
 	}
 
 	public boolean changeWeight(T source, T destination, double weight)
 	{
-		if(!isConnected(source, destination))
-			throw new IllegalArgumentException(source + " and " + destination + " are not connected");
 		Edge<T> edgeFromSource = getEdgeBetween(source, destination);
 		edgeFromSource.setWeight(weight);
 
@@ -98,7 +92,7 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 		return edgeFromDestination.setWeight(weight);
 	}
 
-	private void createEdge(T source, T destination, double weight)
+	private boolean createEdge(T source, T destination, double weight)
 	{
 		edges.putIfAbsent(source, new ArrayList<Edge<T>>(3));
 		List<Edge<T>> edgeList = edges.get(source);
@@ -109,6 +103,7 @@ public class ConcurrentGraph<T> extends RandomHashSet<T> implements Graph<T>, Se
 		edgeList = edges.get(destination);
 		edge = new Edge<T>(destination, source, weight);
 		edgeList.add(edge);
+		return true;
 	}
 
 	@Override
