@@ -13,6 +13,7 @@ public interface Graph<T> extends Collection<T>, RandomAccess<T>
 	boolean remove(Object data);
 	boolean contains(Object data);
 	int edgeSize(T data);
+	boolean allowsNegativeWeights();
 	boolean isDirected();
 	boolean isConnected(T node);
 	boolean isConnected(T start, T end);

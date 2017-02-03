@@ -18,7 +18,7 @@ public class ConcurrentGraphTest
 	@Before
 	public void setup()
 	{
-		graph = new ConcurrentGraph<String>();
+		graph = new ConcurrentGraph<String>(11);
 		for(int i = 0; i < 10; i++)
 			graph.add("node" + i);
 	}
