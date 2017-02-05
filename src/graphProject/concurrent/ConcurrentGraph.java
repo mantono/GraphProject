@@ -327,7 +327,7 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 	@Override
 	public Set<T> getAllNodes()
 	{
-		return (Set<T>) this;
+		return new RandomHashSet<T>(nodes);
 	}
 
 	@Override
