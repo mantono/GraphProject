@@ -130,7 +130,7 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 		}
 		finally
 		{
-			writeLock.unlock();
+			readLock.unlock();
 		}
 	}
 
