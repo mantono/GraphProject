@@ -48,28 +48,40 @@ public class ConcurrentGraph<T> implements Graph<T>, Serializable
 
 	public ConcurrentGraph(Collection<T> nodes)
 	{
-		this(false, false);
+		this(nodes, false, false);
 	}
 
 	public ConcurrentGraph(int initialCapacity)
 	{
 		this(initialCapacity, false, false);
 	}
+	
+	public ConcurrentGraph(int initialCapacity, boolean directed)
+	{
+		this(initialCapacity, directed, false);
+	}
 
 	public ConcurrentGraph(int initialCapacity, boolean directed, boolean allowNegativeWeights)
 	{
 		this.nodes = new RandomHashSet<T>(initialCapacity);
-		this.edges = new HashMap<T, List<Edge<T>>>(initialCapacity, 0.8f);
+		this.edges = new HashMap<T, List<Edge<T>>>(initialCapacity*2, 0.8f);
 		this.directed = directed;
 		this.allowNegativeWeights = allowNegativeWeights;
 	}
 
 	public ConcurrentGraph(boolean directed, boolean allowNegativeWeights)
 	{
-		this.nodes = new RandomHashSet<T>(50);
-		this.edges = new HashMap<T, List<Edge<T>>>(100, 0.8f);
-		this.directed = directed;
-		this.allowNegativeWeights = allowNegativeWeights;
+		this(50, directed, allowNegativeWeights);
+	}
+
+	public ConcurrentGraph(boolean directed)
+	{
+		this(50, directed, false);
+	}
+
+	public ConcurrentGraph()
+	{
+		this(50, false, false);
 	}
 
 	@SuppressWarnings("unchecked")
